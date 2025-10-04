@@ -1,7 +1,57 @@
-How Terraform configured to AWS EC2 instance?
+# Latest Version of Terraform - Version: 1.13.3
+
+terraform -v
+
+For Installation link - https://developer.hashicorp.com/terraform/install
+'''
+Commands - 
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo yum -y install terraform
+
+'''
+
+## AWS IAM (Identity & Access Management)
+1. This service in AWS helps humans to authenticate to AWS
+2. Helps machines or Bots to authenticate to AWS
+3. This defines authorization using ROLES.
+
+### How can we use the keys & authenticate to cloud?
+1. DOwnload the keys
+2. Export keys on your linux server.
+3. Thats it, you are suthenticated to AWS cloud & from that time, you can access your account on AWS cloud.
+4. !!! Keep in mind , these are server where a bunch of people in your org has access to & anyone can see your ACCESS & SECRET key (which no one wants)
+5. This way keys will be exposed throuhgh env variables on Server.
+(if you run "env" command on server you will be able to see keys)
+6. So we Create a ROLES to not to exposed any keys
+
+# It Always goes with "Least Privilege Principl"e to achieve ZERO trust.
+
+### How Authentication works in AWS (or in between AWS services without exposing credentials)
+1. By Default one AWS service cannot authenticate to other AWS service.
+2. In order to enable that authentication, we use something called as ROLES.
+3. IAM Roles in AWS are to enable authentication between aws-services without need of exposing credentials.
+
+If my ec2 instance want to authenticate & create k8s clusters & route53 records, what should I do?
+1. Create AWS IAM role.
+2. Assign the needed k8s & route53 permissions
+3. Then assign that IAM role to the EC2 instance.
+4. Now all the users connected to that instance can authenticate to the services.
+5. This way , we dont have to download the credntials.
+
+# How to create IAM Role & attach it for an EC2 instance?
+1. IAM Roles are to enable authentication & authorization between services in AWS & services outside the AWS as well.
+2. Create an IAM ROles saying that EC2 would like to do some actions.
+3. Assign Admin access to the role.
+4. Now attach this IAM Role to the EC2 instance & from them this EC2 instance is having admin access on the IAM account of AWS.
+5. This way we dont have to download or expose the credentials.
+
+
+# How Terraform configured to AWS EC2 instance?
 > using IAM role(admin role) assigned to ec2 role 
 
-Users in AWS for Human authorization to create different accounts while Roles is for non-human/ aws service to create different accounts.
+Users in AWS for Human authorization to create different accounts while ROLES is for non-human/ enablig the authentication between aws services.
+
 
 one IAM role can be attached to multiple EC2 instances
 But for one EC2 instance you can have only one IAM role.
@@ -12,10 +62,52 @@ But for one EC2 instance you can have only one IAM role.
 
 -/+ means destorying & recreating (Ex- if you change ami)
 
+# Terraform need to apply inside folder not on any single file.
+
+
+
+
+# Rule of Thumb when dealing with Terraform
+1. When you are craeting infra , make sure you deal end-to-end with terraform only.
+2. Manual changes on the console is 100 % NOT encouraged
+3. If you do some changes on the infra provisioned or managed by terraform, terraform is going to wipe those manaul chnages when next run of terraform apply happens.
+
+# When you run terraform apply, is terraform going to create or update or destory my infra?
+1. It depends on the changes that you made on the code or on the infra
+2. If you update the tags, it just replaces without any downtime or interruptions
+
+# Downtime involves by updating below things -
+1. If you just update the tags, it just replaces without any downtime or interruptions.
+
+2. Instance type - t3 to t2
+If you change the instance type, system goes down, updated the instance type & starts the instance.
+
+3. ami - it will change of the boot disk, like properties change & you can verify by instance ID change
+if you change the AMI, then its like destroying & Recreating the instance.
+
+
+# Terraform commands
+
+$ terraform init     (This will initializes the plugins needed for code)
+$ terraform plan     (This will show what its going to chnage the infra based on the code vs what we have on the cloud)
+$ terraform apply -auto-approve   (THis is going to apply changes shown on the plan, if applied immediately)
+
+
+$ terraform init
+$ terraform plan -out=myplan.out  (It will save the plan locally on myplan file)
+$ terraform apply myplan.out    (apply from the myplan.out file only)
+
+It will save the plan locally on myplan file
+Always saving the plan file is better.
+
+
+
 
 
 # how do you configured AWS account with terraform to provison infra?
 Created AWS Role, then Role has been assigned to EC2 instance.
+
+
 
 
 # Variables in Terraform:
@@ -63,6 +155,14 @@ In terraform.tvars you give in key Value pair variables
 DESTORY COMMAND - terraform destroy -auto approve
 
 
+terraform init; terraform plan --var-file="dev.tfvars"; terraform apply --var-file="dev.tfvars" -auto-approve; 
+
+1. Typically values that are common to all are placed on terraform.tfvars (because terraform bydefault picks variables from terraform.tfvars file only )
+2. Values that are environment specific are placed on dev.tfvars or prod.tfvars
+
+## What is *.auto.tfvars ?
+1. Values that are declared in *.auto.tfvars file dont have to be mentioned while running tf commands & these will be picked by default.
+
 
 
 > Terraform Rule of Thumb
@@ -91,11 +191,11 @@ If you change/update in terraform code that cannot be called as  drift.
 
 
 # Attribute VS Arguments
-Arguments - 
-1. Properties needed to provision resource (like instance_type, disk_size
-)
-Attribute - 
-2. Properties that comes up after the provsioning of resources (like private_ip, instance_id, arn)
+Arguments - These are the inputs that helps in creating the infra with the properties of your choice.
+1. Properties needed to provision resource (like instance_type, disk_size, ami, security_groups)
+
+Attribute - These are the properties of the Infra that comes up post the creation of infra
+2. Properties that comes up after the provisioning of resources (like private_ip, instance_id, arn, voulme_id)
 
 
 if more than one values then enclose in [] this bracket.
@@ -129,6 +229,21 @@ count works with List.
 condition ? true_val : false_val
 
 If condition is true then the result is true_val. If condition is false then the result is false_val
+
+
+# Functions in terraform  -
+1. Function in terraform are spplied by hashicorp.
+2. Each & every function has an action.
+3. We cannot make our own functions we just consume them.
+
+Ref - https://developer.hashicorp.com/terraform/language/functions
+
+
+# Exception handling in Terraform -
+1. If you dont declare a key & if you try to use it, it returns a value
+2. we want to make sure , if values are not declared, it should pick a default value.
+3. using 'lookup' function in terraform we can do efficiently when dealing map varibales.
+
 
 # lookup Function
 lookup(map, key, default)
@@ -165,6 +280,10 @@ etc
 2. Downloads the needed plugins
 3. Initializes the modules
 
+# Terraform plan
+Plan is going to show what code is going to do w.r.t what is already there in the AWS account, based on this you are going to either apply or deny or tune it as per your requirement.
+
+
 # Modules
 Modules are the containers for multiple resources that are used together.
 Modules are the main way to package & reuse resource config with Terraform.
@@ -191,7 +310,7 @@ Terraform init is going to do these 3 changes
 # 
 alias "gp"=git pull
 gp; terraform init; terraform plan
-terraform fmt --recursive ; git add. ; git coomit -m "message" ; git push 
+terraform fmt --recursive ; git add .; git commit -m "message" ; git push 
 
 command to exeute with  variable filename - 
 gp; terraform init; terraform plan --var-file=dev.tfvars -lock=false
