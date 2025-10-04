@@ -31,9 +31,7 @@ variable "sample_map" {
   }
 }
 
-output "sample.map_output" {  #this is how we can declare output variable
-  value = var.sample_map
-}
+
 
 output "sample.map_output_x" {  #this is how we can declare output variable
   value = "${var.sample_map["name"]} is a ${var.sample_map["type"]} and his salary is ${var.sample_map["salary"]}"
