@@ -227,6 +227,7 @@ count works with List.
 
 
 # When we learn anything , we keep on applying these principles.
+Always ensure these 4 pillars are covered.
 ...
     1. conditions
     2. variables
