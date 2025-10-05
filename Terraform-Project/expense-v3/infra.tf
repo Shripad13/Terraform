@@ -9,6 +9,7 @@ resource "aws_instance" "main" {
 
   tags = {
     Name = each.key
+    Business_Unit = each.value.business_unit
   }
 }
 
@@ -20,14 +21,17 @@ variable "component" {
   default ={
     frontend = {                      #each.key
       instance_type = "t3.small"     #each.value
+      business_unit = "dev"
     }
     backend = {
       instance_type = "t3.micro"
+      business_unit = "dev"
     }
     mysql = {
       instance_type = "t3.micro"
-    }    
-  }   
+      business_unit = "DB"
+    }
+  }
 }
 
 
