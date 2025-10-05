@@ -19,3 +19,7 @@ variable "component" {
 
 # Name = "frontend-${count.index}" --> frontend-0, frontend-1, frontend-2
 # Name = "frontend-${count.index + 1}" --> frontend-1, frontend-2, frontend-3
+
+
+# Now, would like to create 3 instances with names frontend, backend, mysql with different instance_type for each instance.
+# to overcome this issue will use for_each loop fucntion.

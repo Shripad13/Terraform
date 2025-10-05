@@ -1,6 +1,6 @@
 variable "fruits" {
     default = {
-        apple ={
+        apple = {
             colour = "RED"
             taste  = "sweet"
             price = 100

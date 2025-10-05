@@ -210,6 +210,15 @@ if more than one values then enclose in [] this bracket.
 2. follow camelCase.
 
 
+# When we are dealing at scale, 'for-each' is going to make things handy and helps in efficient way to organize the code.
+
+### for_each -
+1. for_each accepts a map or set of strings , & creates an instance for each item in that map .
+2. each instance has a distict infra object associated with it.& each is separately created/updated/destroyed when the config is applied.
+3. map is nothing but a list of key-value pairs.
+
+
+
 # Important points to be considered - count/for_each
 1. When you use count, you would be using count.index
 count works with List.
