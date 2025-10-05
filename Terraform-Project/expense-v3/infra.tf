@@ -35,3 +35,5 @@ variable "component" {
 }
 
 
+#Key is frontend (which can be called by each.key) & value is { instance_type = "t3.small" business_unit = "dev" } (which can be called by each.value)
+# All the values of it can be referenced by using each.value or to pick a specific value we go as shown.
