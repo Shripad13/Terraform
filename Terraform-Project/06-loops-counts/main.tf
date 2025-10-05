@@ -2,11 +2,12 @@
 
 
 resource "null_resource" "main"  {
-  count = 3                   # count goes by list each & every iteration is defined by a index number
+  count = 3                   # count goes by list each & every iteration is defined by a index number & that many instance will be created
+                                 # here 3 instances will be created with index number 0,1,2
 }
 
 resource "null_resource" "fruits"  {
-  count = length(var.fruits)                         # here count should be based on no. of fruits declared in variable fruits 
+  count = length(var.fruits)                         # here count should be based on no. of fruits declared in variable fruits dynamically 
                                  
 }
 
