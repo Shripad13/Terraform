@@ -9,8 +9,8 @@ resource "aws_instance" "main" {
   for_each = var.component
   ami = "ami-0fcc78c828f981df2" # N.Virginia AMI
   #instance_type = each.value.instance_type
-  instance_type = each.value["instance_type"] == ".*" ? each.value["instance_type"] : "t2.small"
-  # instance_type = each.value["instance_type"] != null ? each.value["instance_type"] : "t2.small"   # this is another way of writing above line
+  #instance_type = each.value["instance_type"] == ".*" ? each.value["instance_type"] : "t2.small"
+  instance_type = each.value["instance_type"] != null ? each.value["instance_type"] : "t2.small"   # this is another way of writing above line
   vpc_security_group_ids = ["sg-082319ecdb6b861c8"]
 
   tags = {
