@@ -1,13 +1,16 @@
-# Now, would like to create 3 instances with names frontend, backend, mysql with different instance_type for each instance.
-# to overcome this issue will use for_each loop fucntion.
-# Here commented line 31 to see if terraform apply fails or not as instance_type is mandatory field.
+# Here commented instance_type = "t3.micro" of mysql variable component to see if terraform apply fails or not as instance_type is mandatory field.
 # It will fail as instance_type is mandatory field.
+
+# Use conditions if instance_type is not provided for any component then give default value as t2.small
+# Now, will make instance_type as optional field by using condition & will give default value as t2.small if instance_type is not provided for any component.
 
 
 resource "aws_instance" "main" {
   for_each = var.component
   ami = "ami-0fcc78c828f981df2" # N.Virginia AMI
-  instance_type = each.value.instance_type
+  #instance_type = each.value.instance_type
+  instance_type = each.value["instance_type"] == ".*" ? each.value["instance_type"] : "t2.small"
+  # instance_type = each.value["instance_type"] != null ? each.value["instance_type"] : "t2.small"   # this is another way of writing above line
   vpc_security_group_ids = ["sg-082319ecdb6b861c8"]
 
   tags = {
