@@ -1,3 +1,8 @@
+#SYNTAX - condition ? true_val : false_val
+# Example: score > 70 ? "You Passed in exam" : "You failed in Exam"
+# If score is greater than 70 then it will return "You Passed in exam" otherwise it will return "You failed in Exam"
+
+
 variable "score" {
   description = "Score of the student"
   default     = 65
