@@ -56,3 +56,6 @@ Purpose: The Terraform version controls how the Terraform tool behaves, the feat
 Definition: Terraform Providers are plugins that allow Terraform to interact with different cloud platforms or services (e.g., AWS, Azure, Google Cloud, Kubernetes)
 Purpose: The provider version controls which version of the API and features Terraform will use when interacting with that specific service.
 
+
+# Terraform Command -
+terraform init; terraform plan; terraform apply -auto-approve

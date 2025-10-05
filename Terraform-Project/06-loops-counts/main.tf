@@ -13,7 +13,7 @@ resource "null_resource" "fruits"  {
 # length function gives the length of the list declared in variable fruits.
 
 variable "fruits" {
-  default = ["apple", "banana", "lemon"]
+  default = ["banana", "lemon"]
 }
 
 
