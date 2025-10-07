@@ -1,3 +1,4 @@
+# This is a Child Module because Reusable, self-contained infrastructure units (e.g., VPC, EC2, RDS)
 
 # Creates multiple EC2 instances
 

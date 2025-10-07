@@ -313,12 +313,32 @@ Plan is going to show what code is going to do w.r.t what is already there in th
 Modules are the containers for multiple resources that are used together.
 Modules are the main way to package & reuse resource config with Terraform.
 
-1. Root Modules : from where you run the Terraform comamnds is called as Root Modules 
-The root module is made up of the resources defined in the main working directory's .tf files.
+> Why Modules Needed?
+Clean code, reusability, scalability, testability, separation of concerns
 
-2. Child/Backend Module : The actual code
+1. Reusability - Avoid repeating the same code for different environments (dev/staging/prod).
+2. Separation of Concerns - Split infrastructure into logical components: networking, compute, storage, monitoring, etc.
+3. Scalability - Modules allow you to organize code cleanly, and scale it without chaos.
+4. Testability and Maintenance - You can test and version individual child modules.
+5. Consistency Across Environments - Use the same modules across dev, staging, and prod with different variables.
 
-A module that has been called by another module is often referred to as a child module.
+
+# 1. Root Modules : 
+1. from where you run the Terraform comamnds is called as Root Modules 
+2. The root module is made up of the resources defined in the main working directory's .tf files.
+3. The entry point of a Terraform configuration (usually the main project folder). It may call child modules.  
+4. The root module is everything in the main working directory where you run Terraform (terraform apply, terraform plan, etc.).
+5. It includes files like main.tf, variables.tf, and outputs.tf.
+6. This is the entry point to your infrastructure.
+7. Think of it as the "main()" function in a programming language — it's where execution starts.
+
+
+# 2. Child/Backend Module : The actual code
+1. A module defined in a separate directory.
+2. Child modules are modules that are called by the root module (or other modules).
+3. These are often stored in a modules/ directory, or fetched from remote sources (GitHub, Terraform Registry, etc.).
+4. Each child module is a self-contained unit for a specific task (e.g., VPC, EC2, RDS).
+
 
 ## Passing the info from root-module to backend module -
 > Rule of the thumb, if you are using a variable in root module, that empty variable has to be declared in the child module, before you use & that where the data-transfer will happen. (thats way of receiving the data from the root module) 
@@ -366,6 +386,8 @@ Terraform init is going to do these 3 changes
 1. Initialization of the backend
 2. Downloads the needed plugins
 3. Initializes the modules
+
+
 
 # 
 alias "gp"=git pull

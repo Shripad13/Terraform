@@ -1,3 +1,5 @@
+# This is a Root Module because values have been assigned to variables here.
+
 variable "components" {
   default = {
     mysql = {

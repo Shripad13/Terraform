@@ -1,3 +1,5 @@
+# This is  a Root Module because Main entry point; includes high-level orchestration of infrastructure
+
 module "app" {
   for_each = var.components
 
