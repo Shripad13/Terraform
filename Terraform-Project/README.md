@@ -269,7 +269,15 @@ what?
 # try Function
 If the input/property itself not provided by you then script will not throw error while its takes a default value provided by you.
 
+## Typically when we are writing terraform, we need to write this in such a way where the code is so agnoistic to project & it can be used in any projects.
 
+## Modules - 
+A Modules is a collection of resources & config files in a directory that are used together. Modules are the primary  way to reuse & package resource config in terraform.
+
+'''
+> In Terraform , everything is a modules & the folders where you run the terraform commands is root module.
+
+'''
 
 # Modules in Terraform 
 1. They help in keeping the code DRY
@@ -277,13 +285,20 @@ If the input/property itself not provided by you then script will not throw erro
 
 # Modules in Terraform are of 2 types
 1. Terraform registry modules (readily available on Terraform portal)
-2. Build Your own modules
+2. Build Your own modules (More controlled approach)
 
 # Module Sources in Terraform
 1. Local Paths
 2. Terraform Registry
 3. Github
 etc
+
+# Major Drawbacks of TF Registry Modules -
+> You cannot use TF Registry Modules because it was created long back so when you use that time versions of TF modules or AWS services will be different.
+> THese mdoules tightly coupled with the versions released at that time.
+If AWS released some new version that time you should not use that registry module.
+
+
 
 # Terraform init is going to do 3 things
 1. Initializes the backend
@@ -298,10 +313,45 @@ Plan is going to show what code is going to do w.r.t what is already there in th
 Modules are the containers for multiple resources that are used together.
 Modules are the main way to package & reuse resource config with Terraform.
 
-1. Root Modules : from where you run the Terraform comamnds
+1. Root Modules : from where you run the Terraform comamnds is called as Root Modules 
+The root module is made up of the resources defined in the main working directory's .tf files.
+
 2. Child/Backend Module : The actual code
 
 A module that has been called by another module is often referred to as a child module.
+
+## Passing the info from root-module to backend module -
+> Rule of the thumb, if you are using a variable in root module, that empty variable has to be declared in the child module, before you use & that where the data-transfer will happen. (thats way of receiving the data from the root module) 
+
+'''
+  1. Declare the variable in the root module.
+  2. Define the value for that in the root module
+  3. Declare an empty variable with the same name.
+  Then use it in the backend module.
+
+'''
+
+## how to retrieve the info from backedn to root module?
+
+ 1. we have code in the backend module that creates EC2 & in the root module. we would like to print the IP-Address of the instance.
+ 2. this goes by outputs.
+
+## Outputs -
+ 1. Outputs in terraform are not just for printing info
+ 2. they also play a role in transfering the info from one module to other module.
+
+ ## Intro to Modules - 
+ 1) How to define modules.
+ 2) How to send info from root module to backend module.
+ 3) How to receive info from backend module to root module.
+
+# This relation is very important while passing the info between the modules:
+1. Inputs provided in *.tfvars
+2. Declare associated empty variables in the root-Module (vars.tf)
+3. Send the input to the module in the root module
+4. Declare the empty variable in the backend module to get the value from root module.
+5. Use the variable in the child module.
+
 
 Passing information between 2 childs modules, cannot be done directly. It should be through root module.
 
