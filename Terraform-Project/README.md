@@ -399,7 +399,9 @@ gp; terraform init; terraform plan --var-file=dev.tfvars -lock=false
 
 
 # Datasources:
-1. Datasource helps in querying the information that's already available
+1. Datasource helps in EXTRACTING the information that's already available resources.
+For each & every resource we have datasource available in the terraform documnetation of the intended resource.
+
 
 # Provisioners:
 1. Local Provisioner : When you want some action to be performed on the machine you're running terraform, then we use local Provisioner.
@@ -410,3 +412,8 @@ gp; terraform init; terraform plan --var-file=dev.tfvars -lock=false
     Provisioners should always be with in the resource.
     Provisioners are always create time provisioners, that means  they will only be executed on the resource during the creation time only. And when you run this for the second time, provisioners wont be executed.
     To make it run all the time , we can use triggers.
+
+# When to use Enclosed brackets?
+> Trainings - Plural - use Square brackets [a,b,..]
+> Training - singular - use in double quotes "a" 
+
