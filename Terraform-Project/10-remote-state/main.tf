@@ -1,6 +1,8 @@
 # Create a s3 bucket to store the terraform state file
 
-resource "null_resource" "main" {}
+resource "null_resource" "main" {}     # Dummy resource to initialize the provider block
+
+resource "null_resource" "bar" {}       # 2nd Dummy resource to initialize the provider block, to check for versioning of s3 bucket 
 
 provider "aws" { }
 
