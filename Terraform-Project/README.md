@@ -403,17 +403,54 @@ gp; terraform init; terraform plan --var-file=dev.tfvars -lock=false
 For each & every resource we have datasource available in the terraform documnetation of the intended resource.
 
 
-# Provisioners:
-1. Local Provisioner : When you want some action to be performed on the machine you're running terraform, then we use local Provisioner.
-2. Remote Provisioner : When you want some action to be performed on the provisioned/remote machine, then we use Remote Provisioner.
-3. Connection Provisioner : To Perform some action on the top of newly provisioned machine, you need to enable a connection & that can be done via connection Provisioner.
+# Provisioners: (Executed the commands)
+These help in doing the tasks on the top of the created infrastructure either from the local machine where we are running the terraform or oon the top of the created infrastructure.
+
+1. Local-exec (Provisioner) : When you want some action to be performed on the machine you're running terraform commands, then we use local Provisioner.
+
+2. Remote-exec (Provisioner) : When you want some action to be performed on the provisioned/remote machine, then we use Remote Provisioner.
+
+3. Connection-block (Provisioner) : To Perform some action on the top of newly provisioned machine, you need to enable a authentication/connection & that can be done via connection Provisioner.
+
+4. File provisioner - To copy something from local to the created instance.
+
+# Provisioners by default are run-time, what does it mean?
+That means they will only be executed during the creation of the infrastructure.
+Not all the time you run.
+You can chnage this behaviour that every run should trigger the Provisioner, we can use trigger.
 
 ** Notes **
-    Provisioners should always be with in the resource.
-    Provisioners are always create time provisioners, that means  they will only be executed on the resource during the creation time only. And when you run this for the second time, provisioners wont be executed.
+    1. Its not recommeneded to keep the provisioners with in the resource.
+    2. Due to some factors, if the provisioner fails, terraform considers it as a resource failure & this will recreate the instance, when run the terraform in the next time.
+
+    3. Provisioners are always create time provisioners, that means  they will only be executed on the resource during the creation time only. And when you run this for the second time, provisioners wont be executed.
     To make it run all the time , we can use triggers.
+
+    4. Prefer to keep it outside the resource block & inside a null_resource (Because Provisioners cannot live outside the resource block) 
+    5. This way we can control which one to be created first & next (when certain flows are not organic)
+
+# How to control the order of execution of resources:
+> frontend > Backend > mysql
+
+1. mysql should be created first.
+2. backend should be created next to the mysql.
+3. frontend should be created after backend.
+
 
 # When to use Enclosed brackets?
 > Trainings - Plural - use Square brackets [a,b,..]
 > Training - singular - use in double quotes "a" 
+
+# Backends in Terraform
+> Backend in Terraform defines where Terraform stores its state data files.
+> Terraform offers Enterprise Edition (TFE )- you dont have to storing & organizing the code.
+> Local Backend , Remote Backend
+
+# Terraform Commands
+$ terraform state list
+
+# Terraform taint resource_name - even though no changes in infra, tf marks that particular object as damage & when make you run "terraform apply" its going to destory the resources.
+
+untaint - damage can be removed.
+
 
