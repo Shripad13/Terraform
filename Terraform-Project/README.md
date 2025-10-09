@@ -453,4 +453,20 @@ $ terraform state list
 
 untaint - damage can be removed.
 
+## When you do a terraform apply, what exactly is happening ?
+1) Your code will be validated against the stateFile and the infra on AWS.
+2) If there are no changes, tf just refreshes and saying nothing to update.
+3) If there are any any deviations between what is there in the code vs what is there in the stateFile vs the infra on AWS, then those changes will be listed as per the code which is the source of truth, then those changes will be applied.
 
+## What will happen if you lose the stateFile ?
+1) Terraform lose track of everything and technically it's a mess then. 
+
+## Since the stateFile is quite important,we need to make sure we never lose it.
+
+So, storing and organizing statefile should have a well defined strategy.
+
+    1) Ensure statefile is never stored locally.
+    2) Ensure, then entire team should refer the statefile locally.
+    3) Ensure, non2 team members should run the terraform apply at a time, even if they run only one apply be executed. Other should be prompted with a msg saying it's locked. 
+    4) Ensure version control is enabled for the statefile. 
+    5) And the place where you store your Terraform Statefile is referred as a backend. Based on the cloud provider, Hashicorp supports n number of backends. 
