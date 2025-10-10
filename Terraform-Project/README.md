@@ -470,3 +470,11 @@ So, storing and organizing statefile should have a well defined strategy.
     3) Ensure, non2 team members should run the terraform apply at a time, even if they run only one apply be executed. Other should be prompted with a msg saying it's locked. 
     4) Ensure version control is enabled for the statefile. 
     5) And the place where you store your Terraform Statefile is referred as a backend. Based on the cloud provider, Hashicorp supports n number of backends. 
+
+
+# .teeraform file contains plugins & old cache.
+for different env , you can delete .terraform folder
+
+> Code Structure:
+1. tf-module-terraform : backend module (actual code of the objects like ec2, vpc, S3, RDS)
+2. expense-terraform : root-module (code to source the backend module, where you run the tf commands)
