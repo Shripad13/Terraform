@@ -9,5 +9,5 @@ module "app" {
   name                   = each.key
   vpc_security_group_ids = var.vpc_security_group_ids
   #zone_id                = var.zone_id
-  #zone_id                 = data.aws_route53_zone.main_id
+  zone_id                 = data.aws_route53_zone.main_id
 }
