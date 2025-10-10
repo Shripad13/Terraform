@@ -12,7 +12,7 @@ data "aws_security_group" "main" {
 
 #output the entire data.aws_security_group.main object.
 # Outputs to display Security Group details
-output "security_group_id" {
+output "security_group_main_id" {
   description = "The ID of the security group"
   value       = data.aws_security_group.main
 }
