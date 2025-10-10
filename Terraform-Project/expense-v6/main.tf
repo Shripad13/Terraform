@@ -1,10 +1,9 @@
 
-variable "vpc_security_group_ids" {
-  description = "The ID of the VPC security group"
-  default = ["sg-082319ecdb6b861c8"]
+data "aws_security_group" "main" {
+  id = var.vpc_security_group_ids[0]
 }
-
 
 output "security_group_id" {
   value = data.aws_security_group.main.id
 }
+
