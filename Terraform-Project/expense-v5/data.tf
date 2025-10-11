@@ -2,7 +2,7 @@
 
 data "aws_route53_zone" "main" {
     name             = "devsecopswithshri.site"
-    private_zone     = true
+    private_zone     = false                # 
 }
   
 
