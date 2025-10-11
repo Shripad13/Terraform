@@ -14,26 +14,6 @@ variable "components" {
   }
 }
 
-variable "ami" {
-    default = "ami-0fcc78c828f981df2" # N.Virginia AMI
+variable "pwd" {
+  default = "ExpenseApp@1"
 }
-
-variable "vpc_security_group_ids" {
-    default = ["sg-082319ecdb6b861c8"]
-}
-
-
-# No need of below bcoz we are extracting the zone_id dynamically from data.tf file
-#variable "zone_id" {
-#    default = "Z0286229L26CBKJWO1LF" # Route53 Zone ID
-#}
-
-
-#data "aws_security_group" "main" {
-#  id = var.vpc_security_group_ids
-#}
-
-output "security_group_id" {
-  value = data.aws_security_group.main.id
-}
-
