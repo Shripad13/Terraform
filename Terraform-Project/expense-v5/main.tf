@@ -8,6 +8,6 @@ module "app" {
   instance_type            = each.value["instance_type"]
   name                     = each.key
   vpc_security_group_ids   = [data.aws_security_group.main.id]
-  zone_id                  = data.aws_route53_zone.main_id
+  zone_id                  = data.aws_route53_zone.main.id
   pwd                      = var.pwd
 }

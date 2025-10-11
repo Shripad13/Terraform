@@ -14,7 +14,7 @@ data "aws_route53_zone" "main" {
 
 data "aws_security_group" "main" {
   filter {
-    name   = "group-name"       # As per teh documentation : https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html
+    name   = "group-name"       # As per the documentation : https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html
     values = ["B58-SG"]         # Name of your security groups that was created by you during the start of the project
   }
 }
