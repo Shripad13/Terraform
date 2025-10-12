@@ -479,7 +479,7 @@ So, storing and organizing statefile should have a well defined strategy.
     5) And the place where you store your Terraform Statefile is referred as a backend. Based on the cloud provider, Hashicorp supports n number of backends. 
 
 
-# .teeraform file contains plugins & old cache.
+# .terraform file contains plugins & old cache.
 for different env , you can delete .terraform folder
 
 > Code Structure:
