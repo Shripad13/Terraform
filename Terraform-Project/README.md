@@ -1,4 +1,4 @@
-# Latest Version of Terraform - Version: 1.13.3
+# Latest Version of Terraform - Version: 1.14.3
 
 terraform -v
 
@@ -25,7 +25,7 @@ sudo yum -y install terraform
 (if you run "env" command on server you will be able to see keys)
 6. So we Create a ROLES to not to exposed any keys
 
-# It Always goes with "Least Privilege Principl"e to achieve ZERO trust.
+# It Always goes with "Least Privilege Principle" to achieve ZERO trust.
 
 ### How Authentication works in AWS (or in between AWS services without exposing credentials)
 1. By Default one AWS service cannot authenticate to other AWS service.
@@ -55,6 +55,9 @@ Users in AWS for Human authorization to create different accounts while ROLES is
 
 one IAM role can be attached to multiple EC2 instances
 But for one EC2 instance you can have only one IAM role.
+But for one EC2 instance you can NOT have multiple IAM roles.
+
+
 
 + means terraform creates a resources, check after terraform apply
 - means terraform destroys a resources, check after terraform apply
@@ -62,9 +65,7 @@ But for one EC2 instance you can have only one IAM role.
 
 -/+ means destorying & recreating (Ex- if you change ami)
 
-# Terraform need to apply inside folder not on any single file.
-
-
+> Terraform need to apply inside folder not on any single file.
 
 
 # Rule of Thumb when dealing with Terraform
@@ -152,7 +153,7 @@ If you need to access a variable then it should be empty variable
 
 In terraform.tvars you give in key Value pair variables
 
-DESTORY COMMAND - terraform destroy -auto approve
+DESTORY COMMAND - terraform destroy -auto-approve
 
 
 terraform init; terraform plan --var-file="dev.tfvars"; terraform apply --var-file="dev.tfvars" -auto-approve; 
@@ -172,7 +173,7 @@ terraform init; terraform plan --var-file="dev.tfvars"; terraform apply --var-fi
 
 > What is a terraform drift?
 1. When a resources is managed by terraform, if you wish to do the changes to that we only do it via tf code.
-2. Doing changes directly from the console, will cause difference in what we have code on versus what is the current from.
+2. Doing changes directly from the console, will cause difference in what we have code on versus what is the current Infra.
 3. This causes a tf drift.
 
 if someone chnages in console & if you want to override what is there in code then run below command
@@ -210,20 +211,24 @@ if more than one values then enclose in [] this bracket.
 2. follow camelCase.
 
 
-# When we are dealing at scale, 'for-each' is going to make things handy and helps in efficient way to organize the code.
-
 ### for_each -
 1. for_each accepts a map or set of strings , & creates an instance for each item in that map .
 2. each instance has a distict infra object associated with it.& each is separately created/updated/destroyed when the config is applied.
 3. map is nothing but a list of key-value pairs.
+
+> When we are dealing at scale, 'for-each' is going to make things handy and helps in efficient way to organize the code.
 
 
 
 # Important points to be considered - count/for_each
 1. When you use count, you would be using count.index
 count works with List.
+2. count - Creates N identical resources, indexed by number.
 2. If you are using for_each , you would  get each.key , each.value 
+3. for_each - Creates resources from a map or set, using stable keys.
 
+count creates multiple resources using a numeric index and is best for identical, fixed-number resources, but removing items can cause unwanted replacements due to index shifting.
+for_each creates resources using stable keys (map/set), making it safer for dynamic or named resources where individual items may be added or removed.
 
 
 # When we learn anything , we keep on applying these principles.
@@ -242,7 +247,7 @@ If condition is true then the result is true_val. If condition is false then the
 
 
 # Functions in terraform  -
-1. Function in terraform are spplied by hashicorp.
+1. Function in terraform are supplied by hashicorp.
 2. Each & every function has an action.
 3. We cannot make our own functions we just consume them.
 
@@ -287,6 +292,8 @@ A Modules is a collection of resources & config files in a directory that are us
 1. Terraform registry modules (readily available on Terraform portal)
 2. Build Your own modules (More controlled approach)
 
+> Terraform Registry is a centralized hub for Terraform providers and reusable modules.
+
 # Module Sources in Terraform
 1. Local Paths
 2. Terraform Registry
@@ -294,7 +301,7 @@ A Modules is a collection of resources & config files in a directory that are us
 etc
 
 # Major Drawbacks of TF Registry Modules -
-> You cannot use TF Registry Modules because it was created long back so when you use that time versions of TF modules or AWS services will be different.
+> You cannot use TF Registry Modules because it was created long back so when you use, that time versions of TF modules or AWS services will be different.
 > THese mdoules tightly coupled with the versions released at that time.
 If AWS released some new version that time you should not use that registry module.
 
@@ -351,7 +358,7 @@ Clean code, reusability, scalability, testability, separation of concerns
 
 '''
 
-## how to retrieve the info from backedn to root module?
+## how to retrieve the info from backend to root module?
 
  1. we have code in the backend module that creates EC2 & in the root module. we would like to print the IP-Address of the instance.
  2. this goes by outputs.
@@ -404,7 +411,7 @@ For each & every resource we have datasource available in the terraform documnet
 
 
 # Provisioners: (Executed the commands)
-These help in doing the tasks on the top of the created infrastructure either from the local machine where we are running the terraform or oon the top of the created infrastructure.
+These help in doing the tasks on the top of the created infrastructure either from the local machine where we are running the terraform or on the top of the created infrastructure.
 
 1. Local-exec (Provisioner) : When you want some action to be performed on the machine you're running terraform commands, then we use local Provisioner.
 
@@ -449,16 +456,25 @@ You can chnage this behaviour that every run should trigger the Provisioner, we 
 # Terraform Commands
 $ terraform state list
 
-# Terraform taint resource_name - even though no changes in infra, tf marks that particular object as damage & when make you run "terraform apply" its going to destory the resources.
+## Terraform taint resource_name - even though no changes in infra, tf marks that particular object as damage & when make you run "terraform apply" its going to destory the resources.
 
-untaint - damage can be removed.
+Taint = “Destroy & recreate this resource”
+Untaint = damage can be removed., “Never mind, keep it”
 
-🟡 Why does it say "tainted"?
+# terraform taint and terraform untaint are commands used to manually control resource replacement in Terraform.
+
+
+## Why does it say "tainted"?
 When Terraform says:
 # module.app["mysql"].null_resource.app is tainted, so must be replaced
 
 It means this null_resource was marked for recreation, usually because:
 It failed during apply or provisioning.
+
+> the terraform taint command is deprecated in the latest versions of Terraform 0.15.2 and later
+ Preferred method is:
+ terraform apply -replace="aws_instance.prod"
+
 
 ## When you do a terraform apply, what exactly is happening ?
 1) Your code will be validated against the stateFile and the infra on AWS.
@@ -474,7 +490,7 @@ So, storing and organizing statefile should have a well defined strategy.
 
     1) Ensure statefile is never stored locally.
     2) Ensure, then entire team should refer the statefile locally.
-    3) Ensure, non2 team members should run the terraform apply at a time, even if they run only one apply be executed. Other should be prompted with a msg saying it's locked. 
+    3) Ensure, no 2 team members should run the terraform apply at a time, even if they run only one apply be executed. Other should be prompted with a msg saying it's locked. 
     4) Ensure version control is enabled for the statefile. 
     5) And the place where you store your Terraform Statefile is referred as a backend. Based on the cloud provider, Hashicorp supports n number of backends. 
 
