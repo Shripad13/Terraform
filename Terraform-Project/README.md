@@ -454,7 +454,7 @@ You can chnage this behaviour that every run should trigger the Provisioner, we 
 > Local Backend , Remote Backend
 
 # Terraform Commands
-$ terraform state list
+ $ terraform state list
 
 ## Terraform taint resource_name - even though no changes in infra, tf marks that particular object as damage & when make you run "terraform apply" its going to destory the resources.
 
@@ -518,3 +518,9 @@ A null_resource is a placeholder resource that does nothing on its own. It's oft
 Run local-exec or remote-exec provisioners (e.g., run a script or command).
 Create dependencies between resources without deploying anything in the cloud.
 Act as a trigger to re-run provisioning steps when certain inputs change.
+
+
+
+# How to plumb modules together?
+Expose the content or data you want to use of a module as output. Plumb that data in the root main.tf file. syntax: `module.<module_name>.<output_name>'
+

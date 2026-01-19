@@ -374,3 +374,59 @@ Prod = safety first
 ## What is Terraform CONSOLE?
 Terraform console is an interactive way that lets you evaluate Terraform expressions using your current configuration and state.
 It’s mainly used to test variables, functions, and expressions without running terraform apply.
+
+2. terraform state list
+ → Verifies what resources are tracked in the remote state.
+3. terraform state pull (my favourite)
+ → Pulls the remote state file and displays it in JSON format.
+ → Useful for inspection and manual state backups.
+
+# Terraform bootstrapping
+Terraform bootstrapping is the process of creating the initial infrastructure and permissions Terraform needs to manage the rest of your infrastructure.
+Terraform cannot manage these resources until they exist, so they must be created first — this is the “bootstrap” phase.
+# Terraform often relies on resources that don’t exist yet, such as:
+A remote backend (e.g., S3 + DynamoDB, GCS, Azure Storage) to store state file
+IAM users, roles, or permissions Terraform needs to run
+Networking or org-level configuration
+A CI/CD runner or execution environment
+
+# Terraform Folder structure for large projects:  
+├── modules/                # Reusable Terraform modules
+│   ├── network/            # Network module (VPC, subnets, etc 
+│   ├── compute/            # Compute module (EC2, ASG, etc)  
+│   └── database/           # Database module (RDS, DynamoDB, etc)
+├── envs/                   # Environment-specific configurations 
+│   ├── dev/                # Development environment
+│   │   ├── main.tf         # Main Terraform configuration for dev 
+│   │   ├── variables.tf    # Variables for dev environment
+│   │   └── backend.tf      # Backend configuration for dev 
+│   ├── staging/            # Staging environment
+│   │   ├── main.tf         # Main Terraform configuration for staging
+│   │   ├── variables.tf    # Variables for staging environment
+│   │   └── backend.tf      # Backend configuration for staging
+│   └── prod/               # Production environment
+│       ├── main.tf         # Main Terraform configuration for prod
+│       ├── variables.tf    # Variables for prod environment
+│       └── backend.tf      # Backend configuration for prod
+├── scripts/                # Helper scripts (e.g., bootstrap, deploy)
+├── .gitignore              # Git ignore file
+├── README.md               # Project documentation
+├── terraform.tfvars        # Common variables file (if any)
+└── providers.tf            # Provider configurations (AWS, GCP, etc)
+
+# What will happen if your Infrastructure has been deleted manually & you run infra provisioning pipeline again?
+Terraform will detect that the resources defined in the state file are missing from the actual infrastructure. When you run the provisioning pipeline again, Terraform will attempt to recreate those missing resources to bring the infrastructure back to the desired state as defined in your Terraform configuration files. This ensures that any manual deletions are corrected and the infrastructure remains consistent with the code.
+
+# How will you setup notification if your pipeline fails while provisioning infra using Terraform?
+To set up notifications for pipeline failures during Terraform infrastructure provisioning, you can integrate your CI/CD pipeline tool (like Jenkins, GitLab CI, GitHub Actions, etc.) with a notification service (like email, Slack, Microsoft Teams, etc.). Here’s a general approach: 
+1. Configure your CI/CD pipeline to include a notification step that triggers on failure.
+2. Use built-in notification plugins or webhooks to send alerts to your chosen communication channel.
+3. Customize the notification message to include relevant details about the failure, such as error logs or links to the pipeline run.
+4. Test the notification setup to ensure that alerts are sent correctly when the pipeline fails.
+5. Monitor and adjust the notification settings as needed to avoid alert fatigue while ensuring critical issues are communicated promptly.
+6. Mail notification plugin in jenkins, Slack notification plugin in jenkins etc.,
+7. Use AWS SNS to send notifications on pipeline failure.
+8. Use Terraform Cloud’s built-in notification system if you are using Terraform Cloud for state management and runs.
+9. Set up monitoring tools like Datadog, PagerDuty, or Opsgenie to alert on pipeline failures.
+
+# 
