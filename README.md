@@ -2,6 +2,11 @@
 
 >https://www.gruntwork.io/blog/terraform-tips-tricks-loops-if-statements-and-gotchas
 
+~ → in-place update
++ → create
+- → destroy
+-/+ → destroy & recreate
+
 # Alternatives of Terraform
 Pulumi (python , Java dev can write their code in same lang, provides CDK to us,(cloud dev kit))
 Crossplane
@@ -89,6 +94,7 @@ We are also using some 3rd party products like conflunce, mongoDB
 Also we have planned to use Multi-Cloud Approach
 With CloudFormation only AWS specific services can be used.
 Terraform has close to 5000 proivders & Procider agnoistic tool.
+Terraform plan gives us a clear picture of what changes are going to be made before applying it.
 
 
 1. if you're tf state is corrupted, what would you do?
@@ -429,4 +435,83 @@ To set up notifications for pipeline failures during Terraform infrastructure pr
 8. Use Terraform Cloud’s built-in notification system if you are using Terraform Cloud for state management and runs.
 9. Set up monitoring tools like Datadog, PagerDuty, or Opsgenie to alert on pipeline failures.
 
-# 
+
+
+#  In which scenarios , terraform will destroy & recreate a resources in AWS cloud?
+
+1. You change an attribute marked ForceNew
+Some resource arguments are immutable in AWS. When they change, Terraform has no choice but to replace the resource.
+
+Examples-
+1. EC2 - subnet_id , availability_zone , ami
+2. EBS - availability_zone
+3. RDS - engine , db_subnet_group_name
+4. VPC - cidr_block
+5. ALB - load_balancer_type (application ↔ network)
+
+2. You change the resource name / identifier
+Many AWS resources treat the name as immutable.
+Examples -
+1. aws_s3_bucket.bucket
+2. aws_db_instance.identifier
+3. aws_iam_role.name
+4. aws_lb.name
+Even though it feels cosmetic, AWS sees this as “new resource”.
+
+3. You change the resource type
+Example:
+resource "aws_instance" "web" { ... }
+→ changed to: resource "aws_launch_template" "web" { ... }
+old resource deleted, new resource created
+
+4. Changes to count / for_each
+Example -
+count = 3
+→ changed to: count = 2
+Terraform will destroy one instance.
+
+More dangerous case: If the order of var.subnets changes → wrong instance destroyed.
+Example - count = length(var.subnets)
+
+Best Practise - for_each = toset(var.subnets)
+
+5. Resource removed from configuration
+  If resource disappears from .tf files, Terraform assumes it’s no longer desired.
+  Terraform will destroy it on apply.
+
+6. lifecycle rules that force replacement
+  lifecycle {
+  create_before_destroy = true
+}
+
+This still destroys the old resource — just after the new one is ready.
+
+7. Provider or Terraform version changes
+This can trigger unexpected replacements during terraform plan.
+👉 Always read provider changelogs before upgrading.
+
+8. Drift detected in AWS
+If someone changes the resource outside Terraform and the attribute is immutable, Terraform must replace it.
+
+Example:
+EC2 instance moved to a different subnet manually (rare, but possible via recreate)
+RDS engine modified manually
+
+Terraform sees: actual state ≠ desired state → replace
+
+9. Importing existing resources incorrectly
+If the imported resource doesn’t match the configuration exactly, Terraform may plan a replace.
+Example: terraform import aws_instance.web i-12345
+But the .tf file has: ami = "ami-xyz"
+Terraform: “This isn’t the same instance” → replace.
+
+10. Explicit -replace flag
+You can force it yourself: terraform apply -replace="aws_instance.web"
+
+
+# Pro tips to avoid accidental destruction
+1. Use for_each instead of count
+2. Use Lifecycle rules to prevent destruction
+lifecycle {
+  prevent_destroy = true
+}

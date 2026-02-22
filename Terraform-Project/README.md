@@ -524,3 +524,133 @@ Act as a trigger to re-run provisioning steps when certain inputs change.
 # How to plumb modules together?
 Expose the content or data you want to use of a module as output. Plumb that data in the root main.tf file. syntax: `module.<module_name>.<output_name>'
 
+When using for_each, module outputs are accessed as module.NAME[KEY].OUTPUT, not module.NAME.OUTPUT.
+
+# terraform attribute
+In Terraform, an attribute reference is the syntax used to access values exported by a resource, data source, input variable, or local value. This allows you to use the outputs of one configuration element as the inputs for another, automatically creating dependencies and preventing hardcoding. 
+
+An attribute reference in Terraform is the syntax used to access values from resources, variables, data sources, or modules using dot notation like
+
+* General Syntax
+<RESOURCE TYPE>.<RESOURCE NAME>.<ATTRIBUTE NAME>
+
+For example, to reference the id attribute of an aws_instance named example:
+aws_instance.example.id
+
+Meaning - 
+aws_instance → resource type
+example → resource name
+id → attribute
+
+In Terraform, an attribute reference is how you access values from:
+Resources
+Data sources
+Variables
+Locals
+Modules
+# Types of References -
+You can reference values from several different sources in Terraform: 
+1. Resources: Access attributes of managed infrastructure objects (e.g., aws_instance.example.public_ip). The available attributes are specific to each resource type and listed in the provider's documentation on the Terraform Registry.
+
+2. Data Sources: Access data fetched from a provider without managing an infrastructure object (e.g., data.aws_ami.example.id). This is useful for looking up existing infrastructure details.
+
+3. Input Variables: Use the var. prefix to access the values of variables defined in your configuration (e.g., var.instance_type).
+
+4. Local Values: Use the local. prefix to access values defined in a locals block (e.g., local.image_name).
+Module Outputs: Access values exposed by a child module (e.g., module.vpc.subnet_ids). 
+
+# Accessing Collections (Lists, Maps, Sets)
+When a resource is created using count or for_each, the reference syntax changes slightly to handle multiple instances: 
+1. count: The resource reference becomes a list of objects. Access individual attributes using index syntax (e.g., aws_instance.example[0].id) or a splat expression to get a list of all IDs (e.g., aws_instance.example[*].id).
+2. for_each: The resource reference becomes a map of objects. Access individual attributes using the key (e.g., aws_instance.example["web"].id). 
+
+# Important Considerations -
+1. Read-Only Attributes: Attributes exported by a resource (like an automatically generated ID) cannot be assigned values in your configuration; you can only reference them elsewhere.
+2. "Computed" Values: Terraform automatically handles values that are not known until the apply phase (e.g., an IP address assigned at creation time). References to such values work seamlessly, though data sources that depend on them might be deferred until the apply phase.
+3. Provider Documentation: The authoritative source for which attributes are available for a specific resource or data source is its documentation on the Terraform Registry. 
+
+🔹 2. Referencing a Resource Attribute
+
+resource "aws_instance" "web" {
+  ami           = "ami-123456"
+  instance_type = "t2.micro"
+}
+
+aws_instance.web.id
+aws_instance.web.public_ip
+
+🔹 3. Referencing with count
+If you use count, the resource becomes a list.
+If you use for_each, the resource becomes a map.
+
+resource "aws_instance" "web" {
+  count = 2
+  ami   = "ami-123456"
+}
+Use index - aws_instance.web[0].id
+Use Splat - aws_instance.web[*].id
+
+🔹 4. Referencing with for_each
+If you use for_each, the resource becomes a map.
+
+resource "aws_instance" "web" {
+  for_each = {
+    dev  = "t2.micro"
+    prod = "t2.small"
+  }
+
+  instance_type = each.value
+}
+
+aws_instance.web["dev"].id
+
+🔹 5. Referencing Variables
+variable "instance_type" {
+  default = "t2.micro"
+}
+
+var.instance_type
+
+🔹 6. Referencing Locals
+locals {
+  environment = "dev"
+}
+
+local.environment
+
+🔹 7. Referencing Data Sources
+data "aws_ami" "latest" {
+  most_recent = true
+  owners      = ["amazon"]
+}
+
+data.aws_ami.latest.id
+
+🔹 8. Referencing Module Outputs
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+
+Reference in root module:  module.network.vpc_id
+
+🔹 9. Nested Attribute Reference
+If attribute is inside an object: 
+aws_instance.web.root_block_device[0].volume_id
+
+
+🔹 10. Interpolation
+Interpolation is only needed inside strings:
+name = "server-${aws_instance.web.id}"
+name = "server-${var.environment}"
+
+
+
+
+
+
+
+
+
+# Functions in Terraform -
+In Bash Scripting to call a script n number of times , we use a function.
+In Terraform to call a block n number of iterative times, we use a dynamic block.
