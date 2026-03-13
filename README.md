@@ -81,6 +81,18 @@ Second apply start ( waits for the lock to be released )
 Lock released after first apply is done
 Second apply continues
 
+Problems with local state:
+Not shared between team members
+No locking (two people can run terraform simultaneously)
+Easy to lose or corrupt
+Contains sensitive data in plain text
+
+Benefits of remote state:
+Shared across team
+Automatic locking prevents concurrent modifications
+Encrypted storage
+Version history
+
 # Most remote backends support locking automatically:
 AWS S3 with DynamoDB (AWS)
 Google Cloud Storage with native locking (GCP)
@@ -515,3 +527,38 @@ You can force it yourself: terraform apply -replace="aws_instance.web"
 lifecycle {
   prevent_destroy = true
 }
+
+
+# List resources in state
+ $ terraform state list
+# Show specific resource
+ $ terraform state show aws_instance.web
+# Move resource to different name
+ $ terraform state mv aws_instance.web aws_instance.web_server
+# Remove resource from state (keeps real resource)
+ $ terraform state rm aws_instance.old
+# Pull current state
+  $terraform state pull > backup.tfstate
+# Import existing resource
+ $terraform import aws_instance.web i-1234567890abcdef0
+
+Emergency scenario: Someone manually deleted a resource in the console. Terraform still thinks it exists. Run terraform state rm to remove it from state, then terraform apply to recreate it.
+
+# Terraform state file becomes 20 MB
+"terraform plan" takes 20 minutes to run & sometimes it fails with timeout error. What will you do?
+When the Terraform state file becomes large (e.g., 20 MB), it can lead to performance issues during "terraform plan" and "terraform apply" operations. Here are some steps you can take to address this issue:
+1. Enable Remote State Storage: Move your state file to a remote backend (e.g., AWS S3, Terraform Cloud) to improve performance and enable state locking.
+2. Use State File Versioning: Enable versioning on your remote state storage to keep track of changes and allow for rollbacks if needed.
+3. Optimize State File: Remove any unnecessary resources or outputs from your state file to reduce its size.
+4. Use State File Filtering: Use the "terraform state list" command to identify and remove any resources that are no longer needed or have been deleted manually.
+5. Split State Files: If your infrastructure is large, consider splitting it into multiple smaller state files using Terraform workspaces or separate modules to improve performance.
+6. Use Terraform State Management Commands: Use commands like "terraform state rm" to remove specific resources from the state file if they are no longer needed, and "terraform state mv" to move resources if necessary.
+
+"terrafomr state mv" used to split the state file into smaller logical states
+- "networking.tfstate"
+- "security.tfstate"
+- "app.tfstate"
+
+Terragrunt was introduced to orchestarte dependencies between the smaller states.
+# What is Terragrunt?
+Terragrunt is a thin wrapper for Terraform that provides extra tools for keeping your Terraform configurations DRY, managing remote state, and orchestrating Terraform commands across multiple modules. It helps you avoid repetition and manage complex Terraform setups more easily.
