@@ -17,15 +17,15 @@ sudo yum -y install terraform
 3. This defines authorization using ROLES.
 
 ### How can we use the keys & authenticate to cloud?
-1. DOwnload the keys
+1. Download the keys
 2. Export keys on your linux server.
-3. Thats it, you are suthenticated to AWS cloud & from that time, you can access your account on AWS cloud.
+3. Thats it, you are Authenticated to AWS cloud & from that time, you can access your account on AWS cloud.
 4. !!! Keep in mind , these are server where a bunch of people in your org has access to & anyone can see your ACCESS & SECRET key (which no one wants)
 5. This way keys will be exposed throuhgh env variables on Server.
 (if you run "env" command on server you will be able to see keys)
 6. So we Create a ROLES to not to exposed any keys
 
-# It Always goes with "Least Privilege Principle" to achieve ZERO trust.
+> Permissions Always goes with "Least Privilege Principle" to achieve ZERO trust !!!
 
 ### How Authentication works in AWS (or in between AWS services without exposing credentials)
 1. By Default one AWS service cannot authenticate to other AWS service.
@@ -37,7 +37,7 @@ If my ec2 instance want to authenticate & create k8s clusters & route53 records,
 2. Assign the needed k8s & route53 permissions
 3. Then assign that IAM role to the EC2 instance.
 4. Now all the users connected to that instance can authenticate to the services.
-5. This way , we dont have to download the credntials.
+5. This way , we dont have to download the credentials.
 
 # How to create IAM Role & attach it for an EC2 instance?
 1. IAM Roles are to enable authentication & authorization between services in AWS & services outside the AWS as well.
@@ -66,6 +66,7 @@ But for one EC2 instance you can NOT have multiple IAM roles.
 -/+ means destorying & recreating (Ex- if you change ami)
 
 > Terraform need to apply inside folder not on any single file.
+> Terraform will compile all the tf files in the folder & then apply the changes to the cloud.
 
 
 # Rule of Thumb when dealing with Terraform
@@ -87,11 +88,11 @@ If you change the instance type, system goes down, updated the instance type & s
 if you change the AMI, then its like destroying & Recreating the instance.
 
 
-# Terraform commands
+# Terraform commands - Steps for Infra Provisioning
 
 $ terraform init     (This will initializes the plugins needed for code)
-$ terraform plan     (This will show what its going to chnage the infra based on the code vs what we have on the cloud)
-$ terraform apply -auto-approve   (THis is going to apply changes shown on the plan, if applied immediately)
+$ terraform plan     (This will show what its going to change the infra based on the code vs what we have on the cloud)
+$ terraform apply -auto-approve   (This is going to apply changes shown on the plan, if applied immediately)
 
 
 $ terraform init
@@ -193,10 +194,10 @@ If you change/update in terraform code that cannot be called as  drift.
 
 # Attribute VS Arguments
 Arguments - These are the inputs that helps in creating the infra with the properties of your choice.
-1. Properties needed to provision resource (like instance_type, disk_size, ami, security_groups)
+Properties needed to provision resource (like instance_type, disk_size, ami, security_groups)
 
 Attribute - These are the properties of the Infra that comes up post the creation of infra
-2. Properties that comes up after the provisioning of resources (like private_ip, instance_id, arn, voulme_id)
+Properties that comes up after the provisioning of resources (like private_ip, instance_id, arn, voulme_id)
 
 
 if more than one values then enclose in [] this bracket.

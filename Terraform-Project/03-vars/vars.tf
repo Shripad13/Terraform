@@ -37,6 +37,9 @@ output "sample_map" {
   value = "${var.sample_map["name"]} is a ${var.sample_map["type"]} and his salary is ${var.sample_map["salary"]}"
 }
 
+output "sample_op"  {
+  value = "Current topic is ${var.sample_map[1]} and this supports more than ${var.sample_map[3]} cloud providers }"
+}
 
 # Accessing a variable from a file
 # If you want to access a variable , you need to declare the empty varibale file.
@@ -57,8 +60,8 @@ output "env" {
    value = "Current environment is ${var.env} and here we use instance type of  ${var.ins_type}"
 }
 
-# Command - terraform init; terraform plan --var-file="dev.tfvars"; terraform apply --var-file="dev.tfvars" -auto-approve; 
-# Command - terraform init; terraform plan --var-file="prod.tfvars"; terraform apply --var-file="prod.tfvars" -auto-approve;
+# Command - terraform init; terraform plan --var-file="dev.tfvars"; terraform apply --var-file="dev.tfvars" -auto-approve
+# Command - terraform init; terraform plan --var-file="prod.tfvars"; terraform apply --var-file="prod.tfvars" -auto-approve
 
 
 variable "city" {}
