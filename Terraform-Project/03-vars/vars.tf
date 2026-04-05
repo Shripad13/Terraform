@@ -20,6 +20,14 @@ output "list" {
   value = var.list
 }
 
+variable "lists" {
+  default = ["100", "Terraform", "true"]
+}
+
+output "sample_op"  {
+  value = "Current topic is ${var.lists[1]} and this supports more than ${var.lists[0]} cloud providers }"
+}
+
 #Map variable (stanadrd variable)
 
 variable "sample_map" { 
@@ -37,9 +45,7 @@ output "sample_map" {
   value = "${var.sample_map["name"]} is a ${var.sample_map["type"]} and his salary is ${var.sample_map["salary"]}"
 }
 
-output "sample_op"  {
-  value = "Current topic is ${var.sample_map[1]} and this supports more than ${var.sample_map[3]} cloud providers }"
-}
+
 
 # Accessing a variable from a file
 # If you want to access a variable , you need to declare the empty varibale file.
