@@ -7,20 +7,20 @@
 fruits = {
   apple = {
     #color = "red"
-    taste = "sweet"
-    price = 10
+    taste  = "sweet"
+    price  = 10
     metric = "count"
   }
   grapes = {
-    color = "yellow"
-    taste = "sweet"
-    price = 20
+    color  = "yellow"
+    taste  = "sweet"
+    price  = 20
     metric = "count"
   }
   lemon = {
-    color = "yellow"
-    taste = "sour"
-    price = 30
+    color  = "yellow"
+    taste  = "sour"
+    price  = 30
     metric = "kg"
   }
 }

@@ -17,14 +17,14 @@ output "score_x" {
 }
 
 
-provider "aws" { }
+provider "aws" {}
 
 resource "aws_instance" "main" {
   ami           = "ami-0fcc78c828f981df2" # N.Virginia AMI
   instance_type = var.env == "dev" ? "t2.micro" : "t3.medium"
-    tags = {
-        Name = "TerraformConditionalInstance"
-    }
+  tags = {
+    Name = "TerraformConditionalInstance"
+  }
 
 }
 

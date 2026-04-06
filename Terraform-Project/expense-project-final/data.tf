@@ -1,10 +1,10 @@
 # All the datasources need to mention in data.tf file.
 
 data "aws_route53_zone" "main" {
-    name             = "devsecopswithshri.site"
-    private_zone     = false                # 
+  name         = "devsecopswithshri.site"
+  private_zone = false # 
 }
-  
+
 
 # By Below output it will show the  entire zone_info, when we tf plan 
 
@@ -14,8 +14,8 @@ data "aws_route53_zone" "main" {
 
 data "aws_security_group" "main" {
   filter {
-    name   = "group-name"       # As per the documentation : https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html
-    values = ["B58-SG"]         # Name of your security groups that was created by you during the start of the project
+    name   = "group-name" # As per the documentation : https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html
+    values = ["B58-SG"]   # Name of your security groups that was created by you during the start of the project
   }
 }
 

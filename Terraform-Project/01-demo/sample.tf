@@ -2,4 +2,4 @@ provider "null" {
   # Configuration options
 }
 
-resource "null_resource" "hello" { }
+resource "null_resource" "hello" {}
