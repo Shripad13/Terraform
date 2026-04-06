@@ -4,12 +4,12 @@
 resource "aws_instance" "main" {
   for_each               = var.component
   ami                    = "ami-0fcc78c828f981df2" # N.Virginia AMI
-  instance_type          = each.value.instance_type
-  vpc_security_group_ids = ["sg-082319ecdb6b861c8"]
+  instance_type          = each.value["instance_type"] # here instance type is based on the value of the key instance_type declared in variable component.
+  vpc_security_group_ids = ["sg-0166f62dc601938f1"]
 
   tags = {
     Name          = each.key
-    Business_Unit = each.value.business_unit
+    Business_Unit = each.value["business_unit"]
   }
 }
 
