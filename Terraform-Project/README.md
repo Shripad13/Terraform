@@ -131,6 +131,7 @@ Note- There is no concept of single quote in terraform.
 '''
 # What is terraform.tfvars?
 This is a file that holds the all the default values that needs to be used irrespective of the environment.
+Common Values will be declared in terraform.tfvars file, which is going to be used across all the environments.
 When you declare the variable values in this file, you dont have to explicitly mention this file as terraform picks "terraform.tfvars" file by default.
 When you declare some value in dev.tfvars, qa.tfvars, prod.tfvars , then while running terraform commands, we need to mention that file.
 
@@ -250,7 +251,7 @@ If condition is true then the result is true_val. If condition is false then the
 # Functions in terraform  -
 1. Function in terraform are supplied by hashicorp.
 2. Each & every function has an action.
-3. We cannot make our own functions we just consume them.
+3. We *cannot* make our own functions we just consume them.
 
 Ref - https://developer.hashicorp.com/terraform/language/functions
 

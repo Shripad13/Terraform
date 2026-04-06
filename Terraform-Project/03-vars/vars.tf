@@ -21,12 +21,17 @@ output "list" {
 }
 
 variable "lists" {
-  default = ["100", "Terraform", "true"]
+  default = ["6000", "Terraform", "true"]
 }
 
 output "sample_op"  {
   value = "Current topic is ${var.lists[1]} and this supports more than ${var.lists[0]} cloud providers }"
 }
+
+
+# var.sample  : Use only if this is not in between a set of strings.
+# {var.sample} : Use this if variable has to be enclosed in a set of strings.
+
 
 #Map variable (stanadrd variable)
 
@@ -40,6 +45,11 @@ variable "sample_map" {
 }
 
 
+# It will print all
+output "m_op" {
+  value =var.sample_map
+}
+
 #this is how we can declare output variable
 output "sample_map" {  
   value = "${var.sample_map["name"]} is a ${var.sample_map["type"]} and his salary is ${var.sample_map["salary"]}"
@@ -48,7 +58,7 @@ output "sample_map" {
 
 
 # Accessing a variable from a file
-# If you want to access a variable , you need to declare the empty varibale file.
+# If you want to access a variable from variable file, you need to declare the empty varibale file.
 
 variable "state" {}
 
