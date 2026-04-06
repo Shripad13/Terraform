@@ -12,6 +12,7 @@ output "score" {
   value = var.score
 }
 
+#SYNTAX - condition ? true_val : false_val
 output "score_x" {
   value = var.score > 70 ? "You Passed in exam" : "You failed in Exam"
 }
