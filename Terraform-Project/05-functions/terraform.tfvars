@@ -1,5 +1,8 @@
 # If you're having data of multiple types, you can use
 # Declare input with map of maps for the variable fruits
+# This avoids the need of declaring multiple variabls.
+
+
 
 fruits = {
   apple = {

@@ -7,14 +7,14 @@ resource "null_resource" "main"  {
 }
 
 resource "null_resource" "fruits"  {
-  count = length(var.fruits)                         # here count should be based on no. of fruits declared in variable fruits dynamically 
+  count = length(var.fruits)             # here count should be based on no. of fruits declared in variable fruits dynamically 
                                  
 }
 
 # length function gives the length of the list declared in variable fruits.
 
 variable "fruits" {
-  default = ["banana", "lemon"]
+  default = ["banana", "lemon", "grapes"]
 }
 
 
