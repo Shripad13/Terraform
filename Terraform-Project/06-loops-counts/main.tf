@@ -18,3 +18,7 @@ variable "fruits" {
 }
 
 
+# here if you change the order of the fruits in the variable fruits, 
+# then the output will also change accordingly as the count is based on the length of the list and the index number is based on the order of the list.
+# IF you remove any fruit, then you dont which fruit is removed as the count is based on the length of the list and the index number is based on the order of the list.
+# So, it is not recommended to use count with list as it can lead to confusion and errors. It is better to use for_each with map or set to avoid such issues.
