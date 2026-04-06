@@ -8,7 +8,7 @@ fruits = {
     price = 10
     metric = "count"
   }
-  banana = {
+  grapes = {
     color = "yellow"
     taste = "sweet"
     price = 20
