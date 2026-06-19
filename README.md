@@ -11,6 +11,8 @@
 Pulumi (python , Java dev can write their code in same lang, provides CDK to us,(cloud dev kit))
 Crossplane
 Cloud Formation (Exclusively for AWS)
+Azure Resource Manager (Exclusively for Azure)
+Google Cloud Deployment Manager (Exclusively for GCP)
 cloud posse (writes code in TF & sell it to clients)
 Open tofu
 
@@ -27,7 +29,9 @@ IBM has  acquired HASHICORP.
 
 Terraform is cloud Native Tool
 Its not created to manage your on-premise Infra.
-If your provate cloud is formed on-premise by using VMWare Vsphere or VMWare Tanzua then Terraform supports
+If your private cloud is formed on-premise by using VMWare Vsphere or VMWare Tanzua then Terraform supports
+
+Terraform is platform-agnostic. It doesn't care whether the infrastructure is in AWS, Azure, GCP, or an on-premises datacenter. If a provider exists for the target system, Terraform can manage it.
 
 # Advantages of using the Terrafrom or IaC -
 1) you design the infra once & can use the same across all environments.
@@ -100,12 +104,27 @@ Azure Blob Storage with native locking (Azure)
 Terraform Cloud or Enterprise (HashiCorp)
 
 
+The "terraform init" command does not lock your remote state file, instead it creates a local file named ".terraform.lock.hcl"to lock down specific provider versions.
+
+During which tf commands lock happens- 
+terraform plan
+terraform apply
+terraform destroy
+terraform state rm
+terraform state mv
+terraform state list
+terraform import
+terraform refresh
+terraform console
 
 1. Why Terraform, as you're already on AWS, why are you not using CloudFormation?
-We are also using some 3rd party products like conflunce, mongoDB
+We are also using some 3rd party products like confluence, mongoDB, github, cloudflare, vault, ansible
 Also we have planned to use Multi-Cloud Approach
+HCL is a easier to read, highly expressive language. In CF , JSON syntax
+terraform plan commands let you preview what Infra changes will occur before applying them.
+COde reusability seamless, cloudFormation require nested stacks.
 With CloudFormation only AWS specific services can be used.
-Terraform has close to 5000 proivders & Procider agnoistic tool.
+Terraform has close to 5000 proivders & Provider agnostic tool.
 Terraform plan gives us a clear picture of what changes are going to be made before applying it.
 
 
@@ -562,3 +581,65 @@ When the Terraform state file becomes large (e.g., 20 MB), it can lead to perfor
 Terragrunt was introduced to orchestarte dependencies between the smaller states.
 # What is Terragrunt?
 Terragrunt is a thin wrapper for Terraform that provides extra tools for keeping your Terraform configurations DRY, managing remote state, and orchestrating Terraform commands across multiple modules. It helps you avoid repetition and manage complex Terraform setups more easily.
+
+
+# Define resource graph in terraform
+In Terraform, a resource graph is Terraform's internal dependency graph that represents all the resources in your configuration and the relationships between them.
+
+Terraform uses this graph to determine:
+The order in which resources should be created
+The order in which resources should be updated
+The order in which resources should be destroyed
+Which resources can be processed in parallel
+
+Benefits of the Resource Graph :
+Ensures correct resource creation order.
+Enables parallel execution of independent resources.
+Helps Terraform calculate changes efficiently during plan and apply.
+
+# How is duplicate resource error ignored during terraform apply?
+Terraform does not automatically ignore duplicate resource errors during terraform apply. If Terraform tries to create a resource that already exists outside of its state, the provider usually returns an error such as "resource already exists," and the apply operation fails.
+
+How to handle it
+1. Import the existing resource into Terraform state
+   terraform import aws_s3_bucket.my_bucket my-existing-bucket
+ This is the preferred approach when the resource already exists.
+
+2. Use a data source instead of creating the resource
+data "aws_s3_bucket" "existing" {
+  bucket = "my-existing-bucket"
+}
+   Use this when Terraform only needs to reference the existing resource.
+
+1. Conditional resource creation
+resource "aws_s3_bucket" "bucket" {
+  count = var.create_bucket ? 1 : 0
+  bucket = "my-bucket"
+}
+   This prevents duplicate creation attempts.
+
+1. State management   
+ If the resource exists but is not in state, import it.
+ If state is incorrect, use Terraform state commands carefully to reconcile it.
+
+This ensures Terraform's state remains consistent with the actual infrastructure. 
+
+# what are the ways to lock the terraform modules versions?
+Terraform modules are typically locked by pinning a specific module version in the module block. For Git-based modules, we can lock to a tag or commit hash. 
+Tag  - source = "git::https://github.com/company/network-module.git?ref=v1.2.3"
+Hash - source = "git::https://github.com/company/network-module.git?ref=a1b2c3d4"
+Terraform only updates modules when requested, such as with "terraform init -upgrade". 
+Providers are locked through the .terraform.lock.hcl file to ensure consistent deployments across environments. (.terraform.lock.hcl)
+
+
+# How to upgrade a terraform to specific version?
+I specify required_version in the Terraform configuration to enforce version compatibility
+ Using a package manager (like Homebrew, apt, or yum) to install the desired version-
+ $ sudo apt update
+ $ sudo apt install terraform=1.8.5-*
+
+After upgrading Terraform, it's common to upgrade providers as well:  terraform init -upgrade 
+
+# How to make use of AND /OR operators in terraform?
+Terraform uses && for logical AND, || for logical OR, and ! for NOT. These operators are commonly used in conditional expressions, variable validations, locals, and resource creation logic. 
+For example, var.env == "prod" && var.enable_server evaluates to true only when both conditions are satisfied.
