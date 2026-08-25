@@ -1,6 +1,6 @@
 
 resource "null_resource" "main" {
-  count = lenght(var.fruits)
+  count = length(var.fruits)
 }
 
 variable "fruits" {}

@@ -289,6 +289,7 @@ A Modules is a collection of resources & config files in a directory that are us
 # Modules in Terraform 
 1. They help in keeping the code DRY
 2. And at the same time, code can be re-used
+3. Instead of duplicating infrastructure code for every environment, we create reusable modules.
 
 # Modules in Terraform are of 2 types
 1. Terraform registry modules (readily available on Terraform portal)
@@ -564,7 +565,15 @@ Module Outputs: Access values exposed by a child module (e.g., module.vpc.subnet
 # Accessing Collections (Lists, Maps, Sets)
 When a resource is created using count or for_each, the reference syntax changes slightly to handle multiple instances: 
 1. count: The resource reference becomes a list of objects. Access individual attributes using index syntax (e.g., aws_instance.example[0].id) or a splat expression to get a list of all IDs (e.g., aws_instance.example[*].id).
+   count is useful when creating multiple similar resources based on a numeric count.
+   count = 3
+
 2. for_each: The resource reference becomes a map of objects. Access individual attributes using the key (e.g., aws_instance.example["web"].id). 
+   for_each is preferable when resources are associated with unique keys.
+   for_each = {
+  app1 = "t3.medium"
+  app2 = "t3.large"
+           }
 
 # Important Considerations -
 1. Read-Only Attributes: Attributes exported by a resource (like an automatically generated ID) cannot be assigned values in your configuration; you can only reference them elsewhere.
