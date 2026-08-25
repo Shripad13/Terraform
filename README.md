@@ -502,7 +502,8 @@ To set up notifications for pipeline failures during Terraform infrastructure pr
 8. Use Terraform Cloud’s built-in notification system if you are using Terraform Cloud for state management and runs.
 9. Set up monitoring tools like Datadog, PagerDuty, or Opsgenie to alert on pipeline failures.
 
-
+# The State File is Locked due to pipeline failed during terraform apply
+If a pipeline job crashes violently or is manually cancelled during an active apply, Terraform might leave a lock on your remote state file to prevent corruption. Future pipeline runs will fail with a State Locked error.Action: You must manually break the lock before running the pipeline again.Authenticate to the backend infrastructure locally.Run terraform force-unlock <LOCK_ID> using the unique Lock ID provided in the failed CI/CD log.Once unlocked, click "Retry" on the pipeline.
 
 #  In which scenarios , terraform will destroy & recreate a resources in AWS cloud?
 
