@@ -495,3 +495,66 @@ vault write auth/kubernetes/role/billing-app-role \
 
 Q. What happens if a developer creates a malicious Pod in a different namespace and tries to spoof the billing-sa name?"
 Vault will instantly reject it. Vault validates both the Service Account Name and the Namespace.
+
+
+
+vault status
+vault operator init
+vault operator unseal  XiHFYHCEkbrhbtNlD25KLt1qrrwUCMsm6x8/Fxe/mTtE
+vault operator unseal  <Paste Unseal Key 2>
+vault operator unseal  <Paste Unseal Key 3>
+
+If you restart ,vault will ask keys with root token
+If you logout from vault then it will just ask the root token
+
+
+# How do you authenticate Vault with AWS
+1. Attach IAM role to EC2  --- Create IAM role and add Policy in JSON format
+2. Attache the IAM role to EC2 instance
+3. sudo systemctl restart vault
+4. Use a Real AWS ARN
+
+vault write auth/aws/role/ec2-vault \    
+auth_type=iam \
+bound_iam_principal_arn=arn:aws:iam::808701193232:role/ec2-vault \
+token_policies=my-app-policy
+
+5. Vault will also throw an error if my-app-policy does not exist yet. 
+If you haven't created it, create a quick dummy policy so the command succeeds:
+
+# Create a basic policy file
+echo 'path "secret/data/*" { capabilities = ["read"] }' > my-app-policy.hcl
+
+# Write it to Vault
+vault policy write my-app-policy my-app-policy.hcl
+
+
+#######################################################33333
+# Auth User pass
+vault auth enable userpass
+
+#######################################################
+vault secrets list
+Path               Type              Accessor                   Description
+----               ----              --------                   -----------
+agent-registry/    agent_registry    agent-registry_471e285b    agent registry
+cubbyhole/         cubbyhole         cubbyhole_6cb315b4         per-token private secret storage
+identity/          identity          identity_770da56c          identity store
+sys/               system            system_a612915b            system endpoints used for control, policy and debugging
+
+
+ec2-vault = arn:aws:iam::808701193232:role/ec2-vault
+
+arn:aws:kms:us-east-1:808701193232:key/eadb47f1-40ab-40a6-abcd-a690d3873ee1
+# AWS KMS Auto-Unseal Configuration
+seal "awskms" {
+  region     = "us-east-1"
+  kms_key_id = "arn:aws:kms:us-east-1:808701193232:key/eadb47f1-40ab-40a6-abcd-a690d3873ee1"
+}
+
+
+
+
+########################################################
+Share me step by step for HashiCorp Vault auto unseal using AWS KMS
+#########################################################
