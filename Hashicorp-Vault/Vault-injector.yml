@@ -1,0 +1,61 @@
+#Here is a complete Kubernetes Deployment manifest demonstrating how to configure the Vault Agent Injector.
+#This setup configures Vault to run as an init container to fetch secrets before the app starts (preventing race conditions) and 
+#as a sidecar container to keep secrets rotated.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-app
+  namespace: core-apps
+  labels:
+    app: billing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing
+  template:
+    metadata:
+      labels:
+        app: billing
+      annotations:
+        # 1. Enable the Vault Agent Injector for this Pod
+        ://hashicorp.com: "true"
+        
+        # 2. Specify the Vault role mapped to your Kubernetes Service Account
+        ://hashicorp.com: "billing-app-role"
+        
+        # 3. FIX RACE CONDITIONS: Force Vault to fetch secrets BEFORE the app boots
+        ://hashicorp.com: "true"
+
+        # 4. Define the secret path to fetch from Vault
+        ://hashicorp.com-secret-config.json: "database/creds/billing-db-role"
+
+        # 5. Format the secret output using Consul Template syntax (e.g., as JSON)
+        ://hashicorp.com-template-config.json: |
+          {{- with secret "database/creds/billing-db-role" -}}
+          {
+            "db_user": "{{ .Data.username }}",
+            "db_pass": "{{ .Data.password }}"
+          }
+          {{- end -}}
+    spec:
+      # Use the specific Service Account authorized in your Vault configuration
+      serviceAccountName: billing-sa
+      containers:
+        - name: app
+          image: internal-registry.local/billing:v2.1
+          ports:
+            - containerPort: 8080
+          # The application simply reads the local file rendered by the Vault Agent
+          command: ["/bin/sh", "-c"]
+          args:
+            - "cat /vault/secrets/config.json && ./run-app"
+
+
+The Destination Path: By default, Vault mounts an in-memory emptyDir volume at /vault/secrets/.
+ The filename matches the suffix of your annotation (config.json in this case), meaning the file will live at /vault/secrets/config.json.
+ Zero-Code Vault Logic: Notice that your application container (name: app) doesn't require any Vault SDKs or environment variables. 
+ It treats Vault secrets exactly like a standard configuration file sitting on a local drive.
+ Continuous Rotation: Because agent-init-first is paired with the running sidecar agent, Vault will constantly monitor the lease. 
+ When the dynamic database credentials near their expiration window, Vault will silently rewrite /vault/secrets/config.json with a brand-new username and password without restarting the Pod.

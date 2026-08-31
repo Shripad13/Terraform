@@ -417,3 +417,81 @@ vault Clients --------------> Vault -------------> Trusted Identity Provider
    No expiry, No modification for root token
    For admins, initial setup & not for prod
    Re generate using $ vault operator generate-root
+
+5. Orphan Tokens - 
+   Orphan Token is a Vault token that does not have a parent token.
+   When you log into Vault and use your token to generate another token, your token becomes the parent, and the new token is the child.
+    $ vault token create -orphan
+    
+# Why Orphan Tokens Are Needed
+If an automated system or pipeline logs into Vault, creates a token for an application, and then logs out (or its own token expires), the application's token would instantly die.
+An Orphan Token breaks this chain. It sits at the top level of the token tree. Because it has no parent, it will never be accidentally revoked when an upstream process, user session, or CI/CD pipeline expires.
+
+1. What is Vault token rotation, and why is it necessary? Answer: 
+Token rotation is the process of periodically replacing existing cryptographic tokens with new ones before they expire. 
+It is necessary to adhere to the principle of least privilege,
+ reduce the blast radius if a token is leaked, and 
+ ensure that stale clients or automated pipelines automatically lose access over time if they are decommissioned.
+
+2. What is the difference between Token Renewal and Token Rotation?Answer:
+   Renewal: Extends the lifespan (TTL) of an **existing** token up to its maximum TTL limit. The token string remains exactly the same.
+   Rotation: Creates an **entirely new token** string with a fresh time-to-live (TTL) window, and revokes or deprecates the old token.
+
+3. What are the primary types of Vault tokens, and how do they impact rotation?Answer:
+    Vault tokens primarily fall into two categories:
+    1. Service Tokens: The standard token type. They are written to storage, support renewal, and can have hierarchical child tokens. Rotating them requires managing their explicit TTLs or explicitly revoking them and issuing new ones.
+    2. Batch Tokens: Lightweight, ephemeral, non-renewable tokens encrypted in-memory (not written to disk). They cannot be renewed, meaning rotation is forced by design—when a batch token reaches its TTL, the application must authenticate again to get a new one.   
+ 
+ 
+4. How does an application natively rotate its own Vault token?Answer: 
+ An application can manage its own lifecycle using a Renew-and-Replace strategy:
+ 
+ 1. The application authenticates via an auth method (e.g., AppRole) and receives a token with an explicit TTL (e.g., 1 hour) and an optional Max TTL.
+ 2. Background logic in the application checks the token's remaining validity.
+ 3. If valid and below a specific threshold (e.g., half its life), it calls the /auth/token/renew-self API endpoint.If it hits the Max TTL, renewal is blocked. 
+ 4. The application must then re-authenticate entirely to fetch a brand new token, effectively completing a rotation cycle.
+
+5. What is the role of the Vault Agent in token rotation, and why is it preferred over native application logic? Answer: 
+   Vault Agent Auto-Auth completely offloads token management from application code.
+   How it works: 
+   The Vault Agent runs alongside the application (e.g., as a sidecar or system daemon). 
+   It handles the initial authentication, secures the token, monitors its TTL, automatically renews it, and re-authenticates to grab a new one when the Max TTL is reached.
+
+6. How does Vault handle token lifecycle management when using dynamic cloud auth methods like AWS IAM or Kubernetes? Answer: 
+   When apps authenticate via platforms like Kubernetes or AWS IAM, token rotation is natively built into the architectural workflow:
+   The application uses its platform identity (e.g., a Kubernetes Service Account Token) to log into Vault.
+   Vault validates this identity and hands back a short-lived Vault Service Token.
+   Because the platform identities themselves rotate frequently (e.g., Kubernetes service account tokens rotate periodically), the application naturally re-authenticates to Vault using a fresh identity, securing a rotated Vault token seamlessly.
+
+# Kubernetes Pod authenticates with HashiCorp Vault, followed by the actual configuration steps required to set it up.   
+Step 1: Enable the Kubernetes Auth Method in Vault
+vault auth enable kubernetes
+
+Step 2: Configure Vault to Talk to your Kubernetes API
+Vault needs permissions to contact your Kubernetes API server to verify tokens. If Vault is running inside the same Kubernetes cluster, it can auto-configure itself natively:
+
+vault write auth/kubernetes/config \
+    kubernetes_host="https://cluster.local"
+
+Step 3: Create a Vault PolicyDefine what the Kubernetes applications are allowed to access. Create a file called app-policy.hcl:
+
+# Allow reading database credentials
+path "database/creds/billing-db-role" {
+  capabilities = ["read"]
+}
+
+
+vault policy write billing-policy app-policy.hcl
+
+Step 4: Map the Kubernetes Identity to the Vault Policy (The Role)
+
+This is the critical bridging step. You tell Vault: "If a Pod arrives using the Service Account named billing-sa inside the namespace core-apps, issue them a token attached to billing-policy
+
+vault write auth/kubernetes/role/billing-app-role \
+    bound_service_account_names=billing-sa \
+    bound_service_account_namespaces=core-apps \
+    policies=billing-policy \
+    ttl=1h
+
+Q. What happens if a developer creates a malicious Pod in a different namespace and tries to spoof the billing-sa name?"
+Vault will instantly reject it. Vault validates both the Service Account Name and the Namespace.
