@@ -558,3 +558,248 @@ seal "awskms" {
 ########################################################
 Share me step by step for HashiCorp Vault auto unseal using AWS KMS
 #########################################################
+
+
+## API Authentication
+curl -H "X-Vault-Token: s.xxxxxx" \
+  http://127.0.0.1:8200/v1/
+
+
+OR
+
+curl -H "Authorization: Bearer s.xxxxxx" \
+  http://127.0.0.1:8200/v1/
+
+OR
+Using namespaces: For Vault Enterprise
+
+curl -H "X-Vault-Token: s.xxxxxx" \
+  -H "X-Vault-Namespace: ns1/ns2" \
+  http://127.0.0.1:8200/v1/
+
+
+OR
+Using API Operations
+Actual operation like GET/POST/PUT/DELETE/LIST
+
+curl -H "X-Vault-Token: s.xxxxxx" \
+  -X GET \
+  http://127.0.0.1:8200/v1/secret/foo
+
+-X = request
+
+curl -H "X-Vault-Token: s.xxxxxx" \
+  -X POST \
+  -d @file.json
+  http://127.0.0.1:8200/v1/secret/bar
+
+-d = data
+    
+curl -H "X-Vault-Token: s.xxxxxx" \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"data": {"value":"bar"}}' \
+  http://127.0.0.1:8200/v1/secret/bar
+
+
+With using Vault Agent -
+
+curl -H "X-Vault-Token: s.xxxxxx" \
+  -H "X-Vault-Request: true" \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"value":"bar"}' \
+  http://127.0.0.1:8200/v1/secret/bar
+
+
+# Auto Generate API curl command
+-output-curl-string
+
+1. Auth to Vault via CURL
+vault status
+curl http://IP:8200/v1/sys/init
+
+vault status -output-curl-string   ---> TO generate the curl command
+
+To generate in key-value JSON format
+curl -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" http://32.199.170.237:8200/v1/sys/seal-status |jq '.'
+
+curl -H "X-Vault-Request: true" -H "X-Vault-Token: $(vault print token)" http://32.199.170.237:8200/v1/auth/token/lookup-self |jq '.data.accessor'
+
+vault login -output-curl-string token=<>
+
+2. Access to Vault secrets via Curl
+
+vault kv get -output-curl-string kv-secret/test-secret
+vault kv list -output-curl-string kv-secret/test-secret
+vault kv delete -output-curl-string kv-secret/test-secret
+
+
+# Vault Policies - 
+1. In Vault everything is **path based**
+2. Policies describes to **grant/forbid access to path**
+3. Grant/forbid will be defined using **capabilities**
+4. Policies are deny by default (empty === no permission)
+5. Vault policies are tied with root token
+
+Vault Policies by :
+
+1. Root
+Super User
+Created during initialization
+Root policies tied with root token
+Capable of performing all actions on all paths
+
+2. Default 
+Common set of capabilities
+Self managing the default token
+cubbyhole data
+
+# Vault Policy Types
+1. ACL policies
+  Access Control List
+  Fine grain Control
+  Templated policies - Identity based/Group based
+
+
+2. Sentinel Policies - Vault Enterprise Plus License
+   Fine grained, logic-based policy
+   Sentinel requires vault Enterprise Plus license
+   Enforcement levels (advisory, soft mandatory, hard mandatory)
+
+Vault Policies are in HCL language
+HCL:
+path "kv/secret/"
+ {
+  capabilities = ["create", "update", "read", "list"]
+ }   
+
+# Vault policy capabilities
+ create  --> POST
+ read    --> GET
+ update  --> POST/PUT
+ delete  --> DELETE
+ list    --> LIST
+ patch   --> PATCH
+ sudo    --> Access to Path that root
+ deny    --> Disable access path
+
+ # Policies Syntax - FIne grained Control
+
+ path "secret/*/restricted"
+ {
+  capabilities = ["create"]
+  allowed_parameters = {
+    "foo" = []
+    "bar" = ["zip", "zap*"]
+  }
+ }
+
+ path "secret/foo"
+ {
+  capabilities = ["create"]
+  required_parameters = ["bar", "baz"]
+ }
+
+ path "secret/foo"
+ {
+  capabilities = ["create"]
+  denied_parameters ={
+    "bar" = ["test", "demo"]}
+ }
+
+
+# Policies syntax -response wrapping TTL's
+
+path "auth/approle/role/my-role/secret1"
+ {
+  capabilities = ["create"]
+  min_wrapping_ttl = "1s"
+  max_wrapping_ttl = "90s"
+ }
+
+ Can be used in jenkins for app role
+
+# Policies syntax - Templated policies
+path "secret/data/{{identity.entity.id}}/*"
+ {
+  capabilities = ["create"]
+ }
+ 
+ path "secret/metadata/{{identity.entity.id}}/*"
+ {
+  capabilities = ["list "]
+ }
+
+
+ > Policies can be created by using CLI or API calls
+
+ # Vault Policy Use case:
+ Associate vault policies to AUthentication Methods - Jenkins server
+ Apply policies to token
+ ACL policies
+ Write policy using Ausit logs
+
+ # App Role Pull AUthentication
+ Enable Approle - $ vault auth enable approle
+ AppRole: Create a Role with policy
+
+vault policy write terraform - << EOF
+path "*" {
+  capabilities = ["list", "read"]
+}
+
+path "secrets/data/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+EOF
+
+$ vault policy list
+
+ Create a App Role:
+
+vault write auth/approle/role/terraform \
+    secret_id_ttl=10m \
+    token_num_uses=10 \
+    token_ttl=20m \
+    token_max_ttl=30m \
+    secret_id_num_uses=40 \
+    token_policies=terraform
+
+After creating the AppRole, you need to generate a Role ID and Secret ID pair. 
+The Role ID is a static identifier, while the 
+Secret ID is a dynamic credential.
+
+ AppRole: Geenerate RoleID & Secret ID
+ $ vault read auth/approle/role/my-approle/role-id
+ $ vault write -f auth/approle/role/my-approle/secret-id
+  
+ Login with ROleID & Secret ID
+ Retrieve specific secret (DB secret1)
+
+1. Create DB/KV secret
+2. Create Policy (to access only DB secret)
+3. Create a Token with Policy
+   $ vault token create  -policy=<policyname>
+   $ vault login token=
+   $  vault auth list
+   $ vault token capabilities path/
+
+
+# Quorum -
+
+Always Vault cluster should be with 3/5 nodes 
+TO maintain the quorum atleast 2 nodes should be available out of 3 
+Use (N+1)/2 formula
+
+If one node goes in failed state, then it will not directly comes into operational
+Vault automaticaaly put the server into "listen-mode" until data replication
+
+Command to check Quorum of cluster
+ $ vault operator raft list-peers
+
+ One node must be leader, other 2 nodes must be follower
+
+
+ 

@@ -128,7 +128,7 @@ Terraform Cloud or Enterprise (HashiCorp)
 
 The "terraform init" command does not lock your remote state file, instead it creates a local file named ".terraform.lock.hcl"to lock down specific provider versions.
 
-During which tf commands lock happens- 
+During below tf commands lock will happens- 
 terraform plan
 terraform apply
 terraform destroy
@@ -503,7 +503,10 @@ To set up notifications for pipeline failures during Terraform infrastructure pr
 9. Set up monitoring tools like Datadog, PagerDuty, or Opsgenie to alert on pipeline failures.
 
 # The State File is Locked due to pipeline failed during terraform apply
-If a pipeline job crashes violently or is manually cancelled during an active apply, Terraform might leave a lock on your remote state file to prevent corruption. Future pipeline runs will fail with a State Locked error.Action: You must manually break the lock before running the pipeline again.Authenticate to the backend infrastructure locally.Run terraform force-unlock <LOCK_ID> using the unique Lock ID provided in the failed CI/CD log.Once unlocked, click "Retry" on the pipeline.
+If a pipeline job crashes violently or is manually cancelled during an active apply, Terraform might leave a lock on your remote state file to prevent corruption. 
+Future pipeline runs will fail with a State Locked error.Action: You must manually break the lock before running the pipeline again.
+Authenticate to the backend infrastructure locally.
+Run terraform force-unlock <LOCK_ID> using the unique Lock ID provided in the failed CI/CD log.Once unlocked, click "Retry" on the pipeline.
 
 #  In which scenarios , terraform will destroy & recreate a resources in AWS cloud?
 

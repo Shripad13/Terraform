@@ -43,10 +43,15 @@ The industry best practice is to use it only to configure initial Auth Methods a
 
 Q1: What is a "Dynamic Secret" in Vault, and how does it differ from a "Static Secret"?Answer:A Static Secret (like KV v2) is defined ahead of time, stays the same until a human manually updates it, and is shared among users or applications.A Dynamic Secret does not exist until an application requests it. Vault connects to the target system (e.g., AWS, a database) on-the-fly, generates a brand-new, unique credential with a strict Time-to-Live (TTL), and automatically deletes (revokes) it when it expires.
 
-Q2: Walk me through the life cycle of a dynamic database secret from generation to expiration.Answer: The life cycle follows four distinct phases:Configuration: An administrator configures a database secrets engine with root connection details and defines a "role" (the SQL template for new users).Request: An application authenticates to Vault and reads the role path (e.g., vault read database/creds/my-app).Generation: Vault dynamically executes the SQL script on the database, creates a unique user account, and hands the credentials + lease ID back to the application.Revocation: When the lease TTL expires (or if explicitly revoked early), Vault automatically connects back to the database and runs a script to drop or disable that specific user account.
+Q2: Walk me through the life cycle of a dynamic database secret from generation to expiration.Answer: The life cycle follows four distinct phases:
+Configuration: An administrator configures a database secrets engine with root connection details and defines a "role" (the SQL template for new users).
+Request: An application authenticates to Vault and reads the role path (e.g., vault read database/creds/my-app).
+Generation: Vault dynamically executes the SQL script on the database, creates a unique user account, and hands the credentials + lease ID back to the application.
+Revocation: When the lease TTL expires (or if explicitly revoked early), Vault automatically connects back to the database and runs a script to drop or disable that specific user account.
 
 
-Q3: What is a Vault "Lease ID," and why is it critical for dynamic secrets?Answer: A Lease ID is a unique tracking identifier that Vault attaches to every dynamic secret it generates. It does not contain the secret itself, but acts as a receipt. Vault uses this Lease ID to track the secret’s age, allow applications to renew it, and accurately target that specific credential for destruction during the revocation process.
+Q3: What is a Vault "Lease ID," and why is it critical for dynamic secrets?Answer: 
+A Lease ID is a unique tracking identifier that Vault attaches to every dynamic secret it generates. It does not contain the secret itself, but acts as a receipt. Vault uses this Lease ID to track the secret’s age, allow applications to renew it, and accurately target that specific credential for destruction during the revocation process.
 
 
 Q4: How do you configure Vault to generate dynamic credentials for a PostgreSQL database? Summarize the main steps.Answer: 
@@ -60,10 +65,67 @@ CREATE USER "{{name}}" WITH PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO "{{name}}";
 
 
-Q5: What happens if a database is down or unreachable when a dynamic secret's TTL expires? How does Vault behave?Answer: If the target system is down, Vault's background revocation manager will fail to delete the credential. Vault will log a revocation error and keep retrying the deletion at periodic intervals (backed by an exponential backoff strategy). The secret remains tracked in Vault's lease storage as "failed revocation" until the database comes back online and the drop command succeeds.
+# How do you configure Vault to generate dynamic credentials for an Oracle DB?
+
+1. Download and Register the Plugin: Ensure your vault.hcl has a defined plugin_directory. Download the Oracle Database Plugin binary from HashiCorp, place it in that directory, and register it:
+
+      vault plugin register \
+         -sha256="<PLUGIN_BINARY_SHA256>" \
+         database vault-plugin-database-oracle
+
+2. Prepare the Oracle DB Administrative User
+   
+   Vault requires a dedicated static database user with high privileges to execute user management statements (CREATE USER, GRANT, DROP USER). 
+   Log into your Oracle instance as an administrator and provision a VAULT_ADMIN user:
+
+'''
+   CREATE USER vault_admin IDENTIFIED BY "ComplexAdminPassword123#";
+   GRANT CREATE USER, ALTER USER, DROP USER TO vault_admin WITH ADMIN OPTION;
+   GRANT CREATE SESSION TO vault_admin WITH ADMIN OPTION;
+   -- Vault needs session termination privileges to clean up users immediately upon lease expiration
+   GRANT ALTER SYSTEM TO vault_admin; 
 
 
-Q6: If an application needs a dynamic secret to last longer than its initial 1-hour TTL, what must the application do, and what constraint will it hit?Answer: The application must proactively call the Vault renew endpoint (vault lease renew <lease-id>) before the 1-hour window closes. However, it can only extend the lease up to the Maximum TTL configured on that Vault secrets engine or role. Once it hits the Max TTL, renewal is blocked, and the application must request an entirely new dynamic secret.
+'''
+
+
+3. Enable the DB secret Engine
+   $ vault secrets enable database 
+
+4. COnfigure the Oracle DB Connection
+   Provide vault with connection details and administrative credentialsso it can create and drop users in your oracle DB. 
+   Use "vault-plugin-database-oracle" as the plugon name.
+
+  vault write database/config/oracle-db \
+      plugin_name="vault-plugin-database-oracle" \
+      allowed_roles="app-read-write" \
+      connection_url="{{username}}/{{password}}@//oracle-server-hostname:1521/ORCLPDB1" \
+      username="vault_admin" \
+      password="ComplexAdminPassword123#"
+
+5. Rotate the root credentials immediately so that the administrative password is randomized and known only by Vault:
+      vault write -force database/rotate-root/oracle-db
+
+
+5. Define a Dynamic Role
+
+   vault write database/roles/app-read-write \
+      db_name="oracle-db" \
+      creation_statements="CREATE USER \"{{name}}\" IDENTIFIED BY \"{{password}}\"; GRANT CREATE SESSION TO \"{{name}}\"; GRANT SELECT, INSERT, UPDATE ON my_schema.my_table TO \"{{name}}\";" \
+      revocation_statements="ALTER SYSTEM KILL SESSION '...'; DROP USER \"{{name}}\" CASCADE;" \
+      default_ttl="1h" \
+      max_ttl="24h"
+
+6.  Fetch Dynamic Credentials
+  $  vault read database/creds/app-read-write
+
+
+Q5: What happens if a database is down or unreachable when a dynamic secret's TTL expires? How does Vault behave?Answer: 
+If the target system is down, Vault's background revocation manager will fail to delete the credential. Vault will log a revocation error and keep retrying the deletion at periodic intervals (backed by an exponential backoff strategy). The secret remains tracked in Vault's lease storage as "failed revocation" until the database comes back online and the drop command succeeds.
+
+
+Q6: If an application needs a dynamic secret to last longer than its initial 1-hour TTL, what must the application do, and what constraint will it hit?Answer:
+ The application must proactively call the Vault renew endpoint (vault lease renew <lease-id>) before the 1-hour window closes. However, it can only extend the lease up to the Maximum TTL configured on that Vault secrets engine or role. Once it hits the Max TTL, renewal is blocked, and the application must request an entirely new dynamic secret.
 
 
 Q1: What is a Vault Secret Engine, and what is its primary purpose?
@@ -132,3 +194,22 @@ Answer:
 2. AWS: Validates IAM signatures or EC2 instance metadata to authenticate cloud resources natively.
 
 3. OIDC / JWT: Integrates with modern Identity Providers (like Okta, Azure AD, or Keycloak) to provide Single Sign-On (SSO) for human users.
+
+
+# Scenarios based questions:
+
+# When a HashiCorp Vault dynamic secret engine stops working for a CI/CD pipeline and is fixed by a simple restart, it usually points to an underlying issue with resource exhaustion, credential synchronization, or connection pooling.
+
+WHy it stopped working:
+1. Lease/Token Limit Exhaustion
+2. Stale or Broken Connection Pools - Vault maintains internal connection pools to talk to target systems 
+3. Target API Rate Limiting: 
+   
+How the Restart Fixed It :
+1. Restarting Vault immediately flushed its active memory, dropped broken connection pools, and re-initialized fresh connections to your target infrastructure.
+2. If you are running Vault in a High Availability (HA) cluster, a restart forces a new leader election. This shifts the workload to a healthy node and forces a full state resynchronization with the storage backend.
+3. Reset Internal Timeouts & Caches
+How to Prevent It From Happening Again:
+1. un vault monitor or check your system logs (like journalctl) around the exact time of the failure to find the specific error message (e.g., context deadline exceeded or lease limit reached).
+2. Optimize TTLs (Time-to-Live): Ensure your dynamic secrets have short default and maximum TTLs. 
+3. Implement Rolling Cleanups: Ensure your CI/CD pipelines explicitly revoke their leases upon completion instead of waiting for the TTL to expire.
