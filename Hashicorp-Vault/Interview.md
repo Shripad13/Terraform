@@ -36,12 +36,16 @@ Instead of relying on external databases (like Consul or AWS S3), Vault handles 
 It uses the Raft consensus protocol across a cluster of nodes (typically 3 or 5), where one node is elected the Leader (processing all writes) and the others act as Standby nodes.
 
 Q6: Why should you immediately revoke or stop using the Initial Root Token after setting up a production Vault environment?
-Answer: The Initial Root Token has absolute privileges, cannot be restricted by standard policies, and does not expire. 
+Answer: 
+The Initial Root Token has absolute privileges, cannot be restricted by standard policies, and does not expire. 
 Leaving it active poses a severe security risk. 
 The industry best practice is to use it only to configure initial Auth Methods and Admin Policies, create a standard admin account, and then immediately revoke the root token.
 
 
-Q1: What is a "Dynamic Secret" in Vault, and how does it differ from a "Static Secret"?Answer:A Static Secret (like KV v2) is defined ahead of time, stays the same until a human manually updates it, and is shared among users or applications.A Dynamic Secret does not exist until an application requests it. Vault connects to the target system (e.g., AWS, a database) on-the-fly, generates a brand-new, unique credential with a strict Time-to-Live (TTL), and automatically deletes (revokes) it when it expires.
+Q1: What is a "Dynamic Secret" in Vault, and how does it differ from a "Static Secret"?
+Answer:
+A Static Secret (like KV v2) is defined ahead of time, stays the same until a human manually updates it, and is shared among users or applications.
+A Dynamic Secret does not exist until an application requests it. Vault connects to the target system (e.g., AWS, a database) on-the-fly, generates a brand-new, unique credential with a strict Time-to-Live (TTL), and automatically deletes (revokes) it when it expires.
 
 Q2: Walk me through the life cycle of a dynamic database secret from generation to expiration.Answer: The life cycle follows four distinct phases:
 Configuration: An administrator configures a database secrets engine with root connection details and defines a "role" (the SQL template for new users).
@@ -51,7 +55,8 @@ Revocation: When the lease TTL expires (or if explicitly revoked early), Vault a
 
 
 Q3: What is a Vault "Lease ID," and why is it critical for dynamic secrets?Answer: 
-A Lease ID is a unique tracking identifier that Vault attaches to every dynamic secret it generates. It does not contain the secret itself, but acts as a receipt. Vault uses this Lease ID to track the secret’s age, allow applications to renew it, and accurately target that specific credential for destruction during the revocation process.
+A Lease ID is a unique tracking identifier that Vault attaches to every dynamic secret it generates. It does not contain the secret itself, but acts as a receipt. 
+Vault uses this Lease ID to track the secret’s age, allow applications to renew it, and accurately target that specific credential for destruction during the revocation process.
 
 
 Q4: How do you configure Vault to generate dynamic credentials for a PostgreSQL database? Summarize the main steps.Answer: 
@@ -133,7 +138,10 @@ Answer:
 A Secret Engine is a component in Vault that handles storing, generating, or encrypting data. Vault handles different data types by using different engines. 
 They are isolated at specific URL paths (e.g., kv/, aws/, database/) and can be enabled, disabled, tuned, or moved independently.
 
-Q2: What is the difference between the Key/Value (KV) Version 1 and Version 2 secret engines?Answer:KV Version 1: A simple storage engine that only retains the current, active value of a secret. Writing new data completely overwrites the old data.KV Version 2: An advanced storage engine that automatically provides secret versioning and history. It allows you to roll back to old secrets, recover deleted keys (undelete), and permanently destroy data using a "purge" operation.
+Q2: What is the difference between the Key/Value (KV) Version 1 and Version 2 secret engines?
+Answer:
+KV Version 1: A simple storage engine that only retains the current, active value of a secret. Writing new data completely overwrites the old data.
+KV Version 2: An advanced storage engine that automatically provides secret versioning and history. It allows you to roll back to old secrets, recover deleted keys (undelete), and permanently destroy data using a "purge" operation.
 
 Q3: If an organization needs to dynamically generate TLS certificates on demand without managing a separate Microsoft or open-source CA infrastructure, which secret engine should they use?
 Answer: 
@@ -177,7 +185,8 @@ Secret ID: acts as the application's "password"
 
 
 Q4: How does the LDAP Auth Method validate user credentials, and does Vault store the user's password?
-Answer: The LDAP auth method delegates authentication to an external directory service (like Active Directory).
+Answer: 
+The LDAP auth method delegates authentication to an external directory service (like Active Directory).
 When a user logs in, Vault securely passes the username and password to the LDAP server for verification. 
 Vault never stores the user's password; it only retains the mapping of LDAP groups to Vault policies.
 
