@@ -580,3 +580,11 @@ That means I understand the environments in which Vault needs to operate—not j
 
 I also understand the importance of automation, least privilege, reliability, traceability and controlled change.
 My goal is to bring that engineering background into the security domain and build deeper specialization in secrets management, privileged access and identity security.
+
+
+What is Interactive & Non-Interactive vault communication with Application? 
+Advantages & disadvantages of UI based & CLI based Hashicorp vault? 
+What happens in the backend when application service account fetches secret from Vault?
+Hashicorp vault Upgrade
+Transit secret engine & KV engine
+How do you customize the authentication engines for identities like OIDC or any methods?
