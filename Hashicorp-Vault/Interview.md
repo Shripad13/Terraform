@@ -5,6 +5,14 @@
 
 However, I understand Vault from the perspective of secrets management and its integration with modern DevOps platforms. I understand concepts such as authentication methods, policies, secrets engines, dynamic secrets, token management, Kubernetes authentication and cloud-based authentication.
 
+
+I have worked with the basic Vault concepts such as secret engines, policies, authentication methods, and retrieving secrets securely for applications or CI/CD pipelines. For example, instead of storing credentials directly in a pipeline or configuration file, the idea is to store them in Vault and allow the pipeline or application to retrieve them at runtime using an appropriate authentication method.
+
+I have also explored how Vault can integrate with DevOps tools and Kubernetes, where applications can authenticate securely and retrieve only the secrets they are authorized to access.
+
+My experience is still at a hands-on and learning level rather than deep production administration. I haven't independently managed a large-scale Vault cluster, but I understand the core concepts and have worked with the practical workflow of secret storage, authentication, policy-based access, and secret retrieval.
+
+
 My experience with RBAC, GitHub Enterprise, Kubernetes, Terraform, cloud platforms and enterprise production environments gives me a strong foundation for working with Vault. I'm particularly interested in the application-onboarding side of Vault, where authentication, authorization, secret lifecycle management and automation come together."
 
 
@@ -572,3 +580,11 @@ That means I understand the environments in which Vault needs to operate—not j
 
 I also understand the importance of automation, least privilege, reliability, traceability and controlled change.
 My goal is to bring that engineering background into the security domain and build deeper specialization in secrets management, privileged access and identity security.
+
+
+What is Interactive & Non-Interactive vault communication with Application? 
+Advantages & disadvantages of UI based & CLI based Hashicorp vault? 
+What happens in the backend when application service account fetches secret from Vault?
+Hashicorp vault Upgrade
+Transit secret engine & KV engine
+How do you customize the authentication engines for identities like OIDC or any methods?
