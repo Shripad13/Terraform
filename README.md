@@ -683,3 +683,55 @@ After upgrading Terraform, it's common to upgrade providers as well:  terraform 
 # How to make use of AND /OR operators in terraform?
 Terraform uses && for logical AND, || for logical OR, and ! for NOT. These operators are commonly used in conditional expressions, variable validations, locals, and resource creation logic. 
 For example, var.env == "prod" && var.enable_server evaluates to true only when both conditions are satisfied.
+
+
+# Dynamic Block
+A dynamic block in Terraform is a feature used to programmatically generate repeated nested blocks inside a resource, data source, provider, or provisioner.
+
+Instead of copying and pasting the same sub-block (like multiple ingress rules inside an AWS security group or subnet settings in a VNet), you use a dynamic block to loop over a collection (a list or map) and construct them automatically.
+
+
+
+• for_each at the resource level: Creates multiple separate instances of an entire infrastructure resource.
+
+• dynamic block: Creates multiple nested blocks inside a single infrastructure resource.
+
+
+1. dynamic "label": The label indicates the name of the nested block you want to produce (e.g., dynamic "ingress").
+2. for_each: The collection (list, set, or map) you want to iterate through.
+
+
+1. Define your data (Variables or Locals)
+
+variable "security_group_ingress" {
+  type = list(object({
+    port        = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    { port = 22,   protocol = "tcp", cidr_blocks = ["10.0.0.0/16"] },
+    { port = 80,   protocol = "tcp", cidr_blocks = ["0.0.0.0/0"] },
+    { port = 443,  protocol = "tcp", cidr_blocks = ["0.0.0.0/0"] }
+  ]
+}
+
+2. Implement the Dynamic Block
+
+resource "aws_security_group" "example" {
+  name        = "example-sg"
+  description = "Managed dynamically"
+  vpc_id      = "vpc-123456"
+
+  # Iterates through var.security_group_ingress and spits out 3 separate "ingress" blocks
+  dynamic "ingress" {
+    for_each = var.security_group_ingress
+    
+    content {
+      from_port   = ingress.value.port
+      to_port     = ingress.value.port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
+    }
+  }
+}
