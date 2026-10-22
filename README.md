@@ -735,3 +735,43 @@ resource "aws_security_group" "example" {
     }
   }
 }
+
+
+# If cloud provider not released terraform code , then how can i write in terraform, is there any way ?
+
+1.  Use local-exec with the Provider's CLI
+ If the cloud provider has a Command Line Interface (CLI) tool but no Terraform provider, you can orchestrate their CLI using Terraform's built-in null_resource and a local-exec provisioner.
+
+2.  Use the TerraCurl Provider
+  TerraCurl allows you to make raw API calls directly inside your HCL configuration while maintaining Terraform's state engine. You simply tell it what HTTP methods and payloads to use for creating and deleting a resource
+
+
+  terraform {
+  required_providers {
+    terracurl = {
+      source = "devops-rob/terracurl"
+    }
+  }
+}
+
+resource "terracurl_request" "custom_vm" {
+  name             = "create_my_vm"
+  url              = "https://customcloud.com"
+  method           = "POST"
+  response_codes   = [201]
+  headers = {
+    Authorization = "Bearer ${var.cloud_token}"
+    Content-Type  = "application/json"
+  }
+  
+  # The API payload to create the resource
+  request_body = jsonencode({
+    name = "my-web-server"
+    size = "small"
+  })
+
+  # Instructions for when you run 'terraform destroy'
+  destroy_url            = "https://customcloud.com/my-web-server"
+  destroy_method         = "DELETE"
+  destroy_response_codes = [204]
+}
