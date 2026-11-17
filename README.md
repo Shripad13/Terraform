@@ -775,3 +775,157 @@ resource "terracurl_request" "custom_vm" {
   destroy_method         = "DELETE"
   destroy_response_codes = [204]
 }
+
+
+
+
+# How to provision the infrastructure on cross AWS account using reusable modules (If Dev & QA is in Non-Production account A and Production is in Other Account B)and what to write in terraform configuration files?
+
+1. This completely isolates the state files between Dev, QA, and Production.
+terraform-aws-infra/
+├── modules/
+│   └── app-stack/                 # Reusable infrastructure blueprint
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+└── environments/
+    ├── non-prod/                  # Account A (Holds both Dev and QA)
+    │   ├── dev/
+    │   │   ├── main.tf
+    │   │   └── provider.tf
+    │   └── qa/
+    │       ├── main.tf
+    │       └── provider.tf
+    └── prod/                      # Account B (Holds Production)
+        ├── main.tf
+        └── provider.tf
+
+
+
+
+Account A: Non-Production (environments/non-prod/dev/ & qa/)
+
+For Dev and QA, configure the AWS provider to assume an IAM Role inside Account A (e.g., 111111111111). Both folders point to the exact same module source but pass different variable values.
+
+provider "aws" {
+  region = "ap-south-1"
+
+  assume_role {
+    role_arn     = "arn:aws:iam::111111111111:role/TerraformExecutionRole"
+    session_name = "TerraformDevSession"
+  }
+}
+
+
+
+Account B: Production (environments/prod/)
+
+For Production, configure the AWS provider to assume an IAM Role inside Account B (e.g., 222222222222). You reuse the exact same module with larger production sizing.
+environments/prod/provider.tf
+
+
+3. Alternative: Deploying Both Accounts in One Single Run
+  If you have a shared resource that must talk across both accounts simultaneously (like VPC Peering or Route53 cross-account DNS), you use **Provider Aliases** in a single root file instead of separate folders:
+
+  # Default provider for Account A (Non-Prod)
+provider "aws" {
+  alias  = "non_prod"
+  region = "ap-south-1"
+  assume_role {
+    role_arn = "arn:aws:iam::111111111111:role/TerraformExecutionRole"
+  }
+}
+
+# Aliased provider for Account B (Prod)
+provider "aws" {
+  alias  = "prod"
+  region = "ap-south-1"
+  assume_role {
+    role_arn = "arn:aws:iam::222222222222:role/TerraformExecutionRole"
+  }
+}
+
+# Call module for Account A
+module "qa_app" {
+  source    = "./modules/app-stack"
+  providers = { aws = aws.non_prod }
+  environment   = "qa"
+  instance_type = "t3.small"
+}
+
+# Call module for Account B
+module "prod_app" {
+  source    = "./modules/app-stack"
+  providers = { aws = aws.prod }
+  environment   = "prod"
+  instance_type = "t3.large"
+}
+
+
+
+Key Prerequisites in AWS
+
+• IAM Trust Policies: Both Account A and Account B must have an IAM Role (TerraformExecutionRole) that trusts your central CI/CD runner or management IAM user to call sts:AssumeRole.
+
+• Isolated Remote State: Add a backend "s3" block in each environment's provider.tf with unique key paths (e.g., dev/terraform.tfstate, qa/terraform.tfstate, prod/terraform.tfstate) so state files never overwrite one another.
+
+
+
+# how do you attach multiple EBS blocks to single EC2 instance in AWS using Terraform?
+
+You can attach multiple EBS volumes to a single EC2 instance in Terraform using the standalone resources approach (aws_ebs_volume + aws_volume_attachment)
+
+
+Method 1: Using Standalone Volumes & Attachments (Recommended)
+
+This approach lets you create individual EBS volumes and explicitly link them to your EC2 instance. It also ensures that if you destroy or replace the EC2 instance, your external data volumes are preserved rather than being automatically deleted.
+
+# 1. Create the EC2 Instance
+resource "aws_instance" "web" {
+  ami           = "ami-0c55b159cbfafe1f0" # Replace with your AMI
+  instance_type = "t3.micro"
+  availability_zone = "ap-south-1a"
+
+  tags = {
+    Name = "MyEC2Instance"
+  }
+}
+
+# 2. Define Multiple EBS Volumes
+resource "aws_ebs_volume" "data_volume" {
+  for_each = {
+    vol1 = { size = 10, type = "gp3", device = "/dev/sdb" }
+    vol2 = { size = 20, type = "gp3", device = "/dev/sdc" }
+    vol3 = { size = 50, type = "gp3", device = "/dev/sdd" }
+  }
+
+  availability_zone = aws_instance.web.availability_zone
+  size              = each.value.size
+  type              = each.value.type
+
+  tags = {
+    Name = "EBS-${each.key}"
+  }
+}
+
+# 3. Attach Each Volume to the EC2 Instance
+resource "aws_volume_attachment" "ebs_att" {
+  for_each = aws_ebs_volume.data_volume
+
+  device_name = {
+    vol1 = "/dev/sdb"
+    vol2 = "/dev/sdc"
+    vol3 = "/dev/sdd"
+  }[each.key]
+
+  volume_id   = each.value.id
+  instance_id = aws_instance.web.id
+}
+
+
+
+Important Things to Keep in Mind
+
+• Availability Zones: The EBS volume must be created in the exact same Availability Zone (e.g., ap-south-1a) as the EC2 instance.
+
+• Device Naming: Depending on your Linux OS flavor and instance type (such as Nitro-based instances like t3, m5, c5), AWS may automatically re-map traditional device names like /dev/sdb into NVMe names (/dev/nvme1n1) inside the operating system. Check your OS mapping using lsblk after boot
